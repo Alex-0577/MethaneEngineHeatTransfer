@@ -114,7 +114,7 @@ def load_parameters(parameter_file='parameters.json'):
         },
         "file_paths": {
             "refprop_path": r"C:\Program Files (x86)\REFPROP",
-            "engine_shape_file": "engine_shape.txt",
+            "engine_shape_file": "AE-1305.txt",
             "parameter_file": "parameters.json"
         },
         "safety_factors": {
@@ -3291,7 +3291,7 @@ def main():
     try:
         # 1. 创建发动机计算实例（启用CEA集成和真实几何数据）
         logger.info("1. 初始化发动机计算环境...")
-        shape_file = "engine_shape.txt"
+        shape_file = params['file_paths']['engine_shape_file']
         
         # 创建实例时传入验证后的路径
         engine = LOX_MethaneEngineHeatTransfer(
