@@ -290,8 +290,8 @@ class CEACalculator:
 
             # 基本性能参数
             Isp = float(self.cea_obj.get_Isp(Pc=Pc_cea_psi, MR=MR, eps=eps))
-            Cstar = float(self.cea_obj.get_Cstar(Pc=Pc_cea_psi, MR=MR))
-            Tcomb = float(self.cea_obj.get_Tcomb(Pc=Pc_cea_psi, MR=MR))
+            Cstar = float(self.cea_obj.get_Cstar(Pc=Pc_cea_psi, MR=MR)) * 3.2808  # ft/s转换为m/s
+            Tcomb = float(self.cea_obj.get_Tcomb(Pc=Pc_cea_psi, MR=MR)) / 1.8  # Rankine(?)转换为开尔文
             
             # 热力学性质
             molwt_gamma = self.cea_obj.get_Chamber_MolWt_gamma(Pc=Pc_cea_psi, MR=MR)
