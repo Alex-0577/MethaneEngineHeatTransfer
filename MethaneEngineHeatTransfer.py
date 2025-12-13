@@ -216,6 +216,7 @@ class CEACalculator:
         参数:
         oxName: str - 氧化剂名称 (默认'LOX')
         fuelName: str - 燃料名称 (默认'CH4')
+        cr: float - 燃烧室收缩比 (默认6.25)
         """
         self.oxName = oxName
         self.fuelName = fuelName
@@ -281,8 +282,7 @@ class CEACalculator:
         try:
             Pc_psi = Pc * self.MPa_to_psi  # 转换为psi供CEA使用
 
-            cr = self.cr if hasattr(self, 'cr') else 6.25
-            PinjOverPcomb = 1.0 + 0.54 / cr**2.2
+            PinjOverPcomb = 1.0 + 0.54 / self.cr**2.2
 
             PinjOverPcomb = self.cea_obj.get_Pinj_over_Pcomb( Pc=Pc_psi * PinjOverPcomb, MR=MR )
 
@@ -1053,7 +1053,7 @@ class LOX_MethaneEngineHeatTransfer:
     - 冷却性能评估
     """
 
-    def __init__(self, refprop_path=None, use_cea=True, engine_shape_file=None, cr=6.25):
+    def __init__(self, refprop_path=None, use_cea=True, engine_shape_file=None):
         """
         初始化发动机传热计算器
         
@@ -1064,14 +1064,6 @@ class LOX_MethaneEngineHeatTransfer:
         """
         # 物理常数
         self.R = 8.314  # 通用气体常数 [J/(mol·K)]
-        
-        # 创建CEA计算器（如果启用）
-        self.cea_calculator = None
-        if use_cea:
-            self.cea_calculator = CEACalculator(cr=cr)
-        
-        # 创建物性计算实例（传递CEA计算器）
-        self.fluid_props = REFPROPFluid(refprop_path, self.cea_calculator)
         
         # 甲烷临界参数
         self.T_CRITICAL_METHANE = 190.56
@@ -1089,6 +1081,24 @@ class LOX_MethaneEngineHeatTransfer:
         
         self.geometry_loader = EngineGeometry(engine_shape_file)
         self._update_geometry_from_shape_file()
+        
+        # 创建CEA计算器（如果启用）
+        self.cea_calculator = None
+        cr = 0
+        if use_cea:
+            Rc = self.geometry_loader.shape_data['header'].get('Rc', None)
+            Rt = self.geometry_loader.shape_data['header'].get('Rt', None)
+            if Rc is not None and Rt is not None:
+                try:
+                    cr = (float(Rc) / float(Rt)) ** 2
+                except (ValueError, TypeError):
+                    logger.warning("几何文件中Rc或Rt参数无效，使用默认压比6.25")
+                    cr = 6.25
+            self.cea_calculator = CEACalculator(cr=cr)
+            logger.debug(f"chamber_ratio = {cr:.3f}，已初始化CEA计算器")
+        
+        # 创建物性计算实例（传递CEA计算器）
+        self.fluid_props = REFPROPFluid(refprop_path, self.cea_calculator)
 
     def _update_geometry_from_shape_file(self):
         """
@@ -3298,7 +3308,6 @@ def main():
             refprop_path=params['file_paths']['refprop_path'],
             use_cea=True,
             engine_shape_file=shape_file,
-            cr=params['engine_geometry']['chamber_ratio']
         )
 
         # 几何文件路径验证
