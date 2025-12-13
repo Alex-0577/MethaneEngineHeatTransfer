@@ -6,8 +6,7 @@
         "number_of_fins": 36,
         "t_fin": 0.001,
         "h_fin": 0.003,
-        "delta_fin": 0.012,
-        "chamber_ratio": 6.25
+        "delta_fin": 0.012
     },
     "combustion_analysis": {
         "Pc_MPa": 10.0,
