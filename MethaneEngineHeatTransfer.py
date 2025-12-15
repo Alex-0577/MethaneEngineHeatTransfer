@@ -2617,6 +2617,41 @@ class MethaneEnginePlotGenerator:
                             optimize=True)
                 except Exception as e3:
                     logger.critical(f"所有保存方法均失败: {e3}")
+
+    def save_data_to_csv(self, data_dict, filename):
+        """
+        将数据保存为CSV文件
+        
+        参数:
+        data_dict: dict - 包含列名和数据的字典
+        filename: str - 输出文件名
+        """
+        try:
+            import pandas as pd
+            
+            # 确保数据长度一致
+            max_length = max(len(v) for v in data_dict.values() if hasattr(v, '__len__'))
+            
+            # 填充数据使其长度一致
+            formatted_data = {}
+            for key, values in data_dict.items():
+                if hasattr(values, '__len__'):
+                    if len(values) < max_length:
+                        # 填充NaN使长度一致
+                        formatted_data[key] = list(values) + [np.nan] * (max_length - len(values))
+                    else:
+                        formatted_data[key] = values
+                else:
+                    # 标量值重复填充
+                    formatted_data[key] = [values] * max_length
+            
+            df = pd.DataFrame(formatted_data)
+            csv_filename = filename.replace('.png', '.csv')
+            df.to_csv(os.path.join(self.output_dir, csv_filename), index=False, encoding='utf-8-sig')
+            logger.info(f"数据已保存为CSV文件: {csv_filename}")
+            
+        except Exception as e:
+            logger.warning(f"CSV文件保存失败: {e}")
     
     def plot_engine_shape(self, axial_results, geometry_data, filename="engine_shape.png"):
         """
@@ -2664,7 +2699,14 @@ class MethaneEnginePlotGenerator:
         plt.tight_layout()
         self.save_plot_with_font_fix(filename, dpi=300, bbox_inches='tight')
         plt.close()
-    
+
+        data_dict = {
+            'axial_position_m': positions,
+            'local_diameter_m': diameters
+        }
+
+        self.save_data_to_csv(data_dict, filename)
+
     def plot_temperature_distribution(self, axial_results, filename="temperature_distribution.png"):
         """
         绘制发动机轴向温度分布图
@@ -2744,6 +2786,18 @@ class MethaneEnginePlotGenerator:
         plt.tight_layout()
         self.save_plot_with_font_fix(filename, dpi=300, bbox_inches='tight')
         plt.close()
+
+        data_dict = {
+            'axial_position_m': positions,
+            'gas_temperature_K': T_gas,
+            'gas_side_wall_temp_K': T_wg,
+            'coolant_side_wall_temp_K': T_wc,
+            'coolant_temperature_K': T_coolant,
+            'dT_wg_dx_K_per_m': dT_dx,
+            'local_mach_number': Ma_numbers
+        }
+        
+        self.save_data_to_csv(data_dict, filename)
 
     def plot_gas_temperature_analysis(self, axial_results, filename="gas_temperature_analysis.png"):
         """
@@ -2844,6 +2898,15 @@ class MethaneEnginePlotGenerator:
         self.save_plot_with_font_fix(filename, dpi=300, bbox_inches='tight')
         plt.close()
 
+        data_dict = {
+            'axial_position_m': positions,
+            'T_gas_K': T_gas,
+            'mach_number': Ma_numbers,
+            'dT_dx_K_per_m': dT_dx
+        }
+
+        self.save_data_to_csv(data_dict, filename)
+
     def plot_coolant_flow_parameters(self, axial_results, filename="coolant_flow_parameters.png"):
         """
         绘制冷却剂流动参数分布图
@@ -2908,6 +2971,17 @@ class MethaneEnginePlotGenerator:
         plt.tight_layout()
         self.save_plot_with_font_fix(filename, dpi=300, bbox_inches='tight')
         plt.close()
+
+        data_dict = {
+            'axial_position_m': positions,
+            'coolant_velocity_m_per_s': velocities,
+            'coolant_pressure_Pa': pressures,
+            'temperature_rise_K': temperature_rises,
+            'pressure_drop_Pa': pressure_drops,
+            'cumulative_pressure_drop_Pa': cumulative_pressure_drop
+        }
+
+        self.save_data_to_csv(data_dict, filename)
 
     def plot_coolant_properties(self, axial_results, filename="coolant_properties.png"):
         """
@@ -2987,6 +3061,17 @@ class MethaneEnginePlotGenerator:
         self.save_plot_with_font_fix(filename, dpi=300, bbox_inches='tight')
         plt.close()
 
+        data_dict = {
+            'axial_position_m': positions,
+            'coolant_density_kg_per_m3': densities,
+            'coolant_viscosity_Pa_s': viscosities,
+            'coolant_conductivity_W_per_mK': conductivities,
+            'coolant_specific_heat_J_per_kgK': specific_heats,
+            'coolant_prandtl_number': prandtls
+        }
+
+        self.save_data_to_csv(data_dict, filename)
+
     def plot_gas_properties(self, axial_results, filename="gas_properties.png"):
         """
         绘制燃气物性参数分布图
@@ -3064,6 +3149,15 @@ class MethaneEnginePlotGenerator:
         plt.tight_layout()
         self.save_plot_with_font_fix(filename, dpi=300, bbox_inches='tight')
         plt.close()
+
+        data_dict = {
+            'axial_position_m': positions,
+            'gas_density_kg_per_m3': densities,
+            'gas_viscosity_Pa_s': viscosities,
+            'gas_conductivity_W_per_mK': conductivities,
+            'gas_specific_heat_J_per_kgK': specific_heats,
+            'gas_prandtl_number': prandtls
+        }
     
     def plot_velocity_analysis_comparison(self, axial_results, filename="velocity_analysis_comparison.png"):
         """
@@ -3194,6 +3288,19 @@ class MethaneEnginePlotGenerator:
         plt.close()
         
         logger.info(f"流速分析对比图表已生成: {filename}")
+
+        data_dict = {
+            'axial_position_m': positions,
+            'coolant_velocity_m_per_s': velocities,
+            'coolant_density_kg_per_m3': densities,
+            'flow_area_m2': flow_areas,
+            'velocity_gradient_m_per_s2': velocity_gradient,
+            'acceleration_m_per_s2': acceleration,
+            'speeds_of_sound': speeds_of_sound,
+            'mach_number': mach_numbers
+        }
+
+        self.save_data_to_csv(data_dict, filename)
 
 
 def validate_geometry_calculation(self):
