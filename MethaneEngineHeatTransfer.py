@@ -691,6 +691,11 @@ class REFPROPFluid:
         返回:
         dict: 包含密度、粘度、热导率、比热等物性的字典
         """
+        if T < 1 or T > 2000:
+            logger.warning(f"甲烷物性计算: 温度{T}K超出常规范围(1-2000K)，但仍继续计算")
+        if P < 1000 or P > 100e6:
+            logger.warning(f"甲烷物性计算: 压力{P/1e6:.2f}MPa超出常规范围(0.001-100MPa)，但仍继续计算")
+
         if self.RP is None:
             logger.debug(f"REFPROP不可用，使用默认甲烷物性计算: T={T}K, P={P/1e6:.2f}MPa")
             return self._get_default_methane_properties(T, P)
@@ -808,6 +813,11 @@ class REFPROPFluid:
     def get_combustion_gas_properties(self, T, P, mixture_ratio=3.5, Pc_MPa=10.0, eps=20.0):
         """增强温度范围检查，T>2000K时强制使用CEA增强模型"""
         # 定义REFPROP有效温度范围
+        if T < 500 or T > 4000:
+            logger.warning(f"燃烧产物物性计算: 温度{T}K超出常规范围(500-4000K)，但仍继续计算")
+        if P < 1e5 or P > 50e6:
+            logger.warning(f"燃烧产物物性计算: 压力{P/1e6:.2f}MPa超出常规范围(0.1-50MPa)，但仍继续计算")
+
         REFPROP_T_MAX = 2000.0  # [K]
         logger.debug(f"开始计算燃烧产物物性: T={T}K, P={P/1e6:.2f}MPa, O/F={mixture_ratio}")
         
@@ -1283,6 +1293,8 @@ class LOX_MethaneEngineHeatTransfer:
         speed_of_sound = coolant_props.get('speed_of_sound', 400)  # 默认音速
         mach_number = velocity / speed_of_sound if speed_of_sound > 0 else 0
         logger.debug(f"冷却剂马赫数: Ma={mach_number:.3f} (音速={speed_of_sound:.2f}m/s)")
+        # if mach_number > 0.8:  # 更保守的阈值
+        #     logger.warning(f"冷却剂马赫数较高: Ma={mach_number:.3f}，可能影响计算精度")
         
         # 压缩性修正（Ma > 0.3时触发）
         if mach_number > 0.3:
@@ -1842,7 +1854,7 @@ class LOX_MethaneEngineHeatTransfer:
         return eta_gf
 
     def solve_heat_balance(self, T_gas, P_chamber, c_star, m_dot_coolant,
-                         T_coolant_in, P_coolant_in, geometry_params,material_properties, operating_conditions, film_cooling_params=None):
+                         T_coolant_in, P_coolant_in, geometry_params,material_properties, operating_conditions, film_cooling_params=None, initial_guess=None):
         """
         求解推力室壁面热平衡方程 - 基于论文公式(1)的三层热阻模型
         
@@ -1984,25 +1996,34 @@ class LOX_MethaneEngineHeatTransfer:
             return [residual1, residual2]
 
         
-        # 初始猜测值 (基于典型发动机壁温范围)
-        T_wc_guess = max(T_coolant_in, 100.0)  # 确保不低于冷却剂入口温度
-        T_wg_guess = min(T_gas, max(500.0, T_wc_guess + 200.0))  # 合理温差
-        logger.debug(f"初始猜测: T_wg={T_wg_guess}K, T_wc={T_wc_guess}K")
-        initial_guess = [T_wg_guess, T_wc_guess]
+        T_wg_guess = None
+        T_wc_guess = None
+        # 修改初始猜测部分 - 使用传入的initial_guess参数
+        if initial_guess is not None:
+            # 使用传入的初始猜测
+            T_wg_guess, T_wc_guess = initial_guess
+            logger.debug(f"使用传入的初始猜测: T_wg={T_wg_guess}K, T_wc={T_wc_guess}K")
+        else:
+            # 如果没有传入初始猜测，使用原来的默认方法
+            T_wc_guess = max(T_coolant_in, 100.0)
+            T_wg_guess = min(T_gas, max(500.0, T_wc_guess + 200.0))
+            logger.debug(f"使用默认初始猜测: T_wg={T_wg_guess}K, T_wc={T_wc_guess}K")
+        
+        initial_guess_array = [T_wg_guess, T_wc_guess]
         
         # 使用fsolve求解非线性方程组
         try:
-            sol, infodict, ier, mesg = fsolve(heat_balance_equations, initial_guess, full_output=True)
+            sol, infodict, ier, mesg = fsolve(heat_balance_equations, initial_guess_array, full_output=True)
             T_wg_sol, T_wc_sol = sol
             logger.debug(f"求解结果: T_wg={T_wg_sol:.2f}K, T_wc={T_wc_sol:.2f}K, ier={ier}, mesg={mesg}")
 
             if ier != 1:
                 logger.warning(f"热平衡fsolve未收敛: {mesg}. 返回初值。T_wg={T_wg_sol}, T_wc={T_wc_sol}")
-                return initial_guess[0], initial_guess[1]
+                return initial_guess_array[0], initial_guess_array[1]
             # 检查解的有效性
             if T_wg_sol < 1.0 or T_wc_sol < 1.0:
                 logger.warning(f"热平衡求解得到非物理温度: T_wg={T_wg_sol}, T_wc={T_wc_sol}. 返回初值。")
-                return initial_guess[0], initial_guess[1]
+                return initial_guess_array[0], initial_guess_array[1]
             logger.debug(f"热平衡求解成功: T_wg={T_wg_sol:.2f}K, T_wc={T_wc_sol:.2f}K")
             return T_wg_sol, T_wc_sol
         except Exception as e:
@@ -2056,10 +2077,7 @@ class LOX_MethaneEngineHeatTransfer:
         
         return delta_T
 
-    def calculate_axial_distribution(self, T_gas, P_chamber, c_star, 
-                                   m_dot_coolant, T_coolant_in, P_coolant_in,
-                                   material_properties, operating_conditions,
-                                   num_segments, mixture_ratio=3.5, film_cooling_params=None):
+    def calculate_axial_distribution(self, T_gas, P_chamber, c_star, m_dot_coolant, T_coolant_in, P_coolant_in, material_properties, operating_conditions, num_segments, mixture_ratio=3.5, film_cooling_params=None):
         """
         计算推力室轴向温度、压力和热流分布
         
@@ -2104,6 +2122,9 @@ class LOX_MethaneEngineHeatTransfer:
         gas_properties_data = []
 
         T0 = T_gas  # 滞止温度（燃烧室入口温度）
+
+        previous_T_wg = None
+        previous_T_wc = None
 
         # 重置警告标志
         self.fluid_props.reset_warning_flags()
@@ -2196,13 +2217,28 @@ class LOX_MethaneEngineHeatTransfer:
                 'local_channel_width': b_channel_local,
                 'axial_position': x_position
             }
+
+            T_wg_guess = None
+            T_wc_guess = None
+
+            # 设置初始猜测 - 使用前一点的值
+            if previous_T_wg is not None and previous_T_wc is not None:
+                T_wg_guess = previous_T_wg
+                T_wc_guess = previous_T_wc
+            else:
+                # 第一点使用默认猜测
+                T_wc_guess = max(T_coolant_current, 100.0)
+                T_wg_guess = min(T_gas, max(500.0, T_wc_guess + 200.0))
             
             T_wg, T_wc = self.solve_heat_balance(
                 T_gas_local, P_chamber, c_star, m_dot_coolant, 
                 T_coolant_current, P_coolant_current,
                 geometry_params, material_properties, operating_conditions_local,
-                current_film_params
+                current_film_params, initial_guess=(T_wg_guess, T_wc_guess)
             )
+
+            previous_T_wg = T_wg
+            previous_T_wc = T_wc
 
             logger.debug(f"求解结果: T_wg={T_wg:.2f}K, T_wc={T_wc:.2f}K")
             
