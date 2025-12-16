@@ -2533,6 +2533,7 @@ class MethaneEnginePlotGenerator:
         - 初始化绘图参数
         """
         self.output_dir = output_dir
+        self.csv_dir = os.path.join(output_dir, "CSV_Data")
         self._setup_plotting_environment()
         self._create_output_directory()
 
@@ -2559,6 +2560,9 @@ class MethaneEnginePlotGenerator:
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
             logger.info(f"创建图表输出目录: {self.output_dir}")
+        if not os.path.exists(self.csv_dir):
+            os.makedirs(self.csv_dir)
+            logger.info(f"创建CSV数据输出目录: {self.csv_dir}")
 
     def save_plot_with_font_fix(self, filename, dpi=300, bbox_inches='tight'):
         """
@@ -2647,7 +2651,7 @@ class MethaneEnginePlotGenerator:
             
             df = pd.DataFrame(formatted_data)
             csv_filename = filename.replace('.png', '.csv')
-            df.to_csv(os.path.join(self.output_dir, csv_filename), index=False, encoding='utf-8-sig')
+            df.to_csv(os.path.join(self.csv_dir, csv_filename), index=False, encoding='utf-8-sig')
             logger.info(f"数据已保存为CSV文件: {csv_filename}")
             
         except Exception as e:
@@ -2734,7 +2738,7 @@ class MethaneEnginePlotGenerator:
 
         # 提取燃气温度数据
         T_gas = [seg.get('gas_temperature', seg.get('stagnation_temperature', 3000)) for seg in axial_results]  # 兼容旧数据
-        Ma_numbers = [seg.get('local_mach_number', 0) for seg in axial_results]
+        Ma_numbers = [seg.get('mach_number', 0) for seg in axial_results]
         
         # 1. 主温度图
         ax1.plot(positions, T_gas, 'c--', linewidth=3, label='燃气温度', alpha=0.9)
@@ -2819,7 +2823,7 @@ class MethaneEnginePlotGenerator:
         
         positions = [seg['axial_position'] for seg in axial_results]
         T_gas = [seg.get('gas_temperature', 3000) for seg in axial_results]
-        Ma_numbers = [seg.get('local_mach_number', 0) for seg in axial_results]
+        Ma_numbers = [seg.get('mach_number', 0) for seg in axial_results]
         diameters = [seg['local_diameter'] for seg in axial_results]
         
         # 1. 燃气温度与马赫数关系
