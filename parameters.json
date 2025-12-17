@@ -30,7 +30,11 @@
         "m_dot_coolant": 0.42,
         "T_coolant_in": 110,
         "P_coolant_in_MPa": 10,
-        "mixture_ratio": 3.2
+        "mixture_ratio": 3.2,
+        "film_cooling": {
+            "start_position": 100,
+            "liquid_film_end": 100
+        }
     },
     "calculation_settings": {
         "num_segments": 100,

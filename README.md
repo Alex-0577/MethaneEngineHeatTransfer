@@ -160,7 +160,11 @@ project/
   "m_dot_coolant": "冷却剂质量流量 [kg/s]",
   "T_coolant_in": "冷却剂入口温度 [K]",
   "P_coolant_in_MPa": "冷却剂入口压力 [MPa]",
-  "mixture_ratio": "设计混合比"
+  "mixture_ratio": "设计混合比",
+  "flim_cooling": {
+    "start_position": "液膜冷却开始位置（此前没有膜冷却）",
+    "liquid_film_end": "液膜冷却结束位置（即气膜冷却开始位置）"
+  }
 }
 ```
 

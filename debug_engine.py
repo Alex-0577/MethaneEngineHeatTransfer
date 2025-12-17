@@ -31,7 +31,7 @@ def debug_geometry_loading():
     logger.info("=== 调试几何加载 ===")
     
     try:
-        from your_module import EngineGeometry
+        from MethaneEngineHeatTransfer import EngineGeometry
         
         # 测试几何加载器
         geometry = EngineGeometry()
@@ -54,7 +54,7 @@ def debug_axial_distribution():
     logger.info("=== 调试轴向分布计算 ===")
     
     try:
-        from your_module import LOX_MethaneEngineHeatTransfer
+        from MethaneEngineHeatTransfer import LOX_MethaneEngineHeatTransfer
         
         # 创建简化版本的发动机实例用于调试
         engine = LOX_MethaneEngineHeatTransfer(
@@ -97,10 +97,10 @@ def debug_heat_balance():
     logger.info("=== 调试热平衡计算 ===")
     
     try:
-        from your_module import LOX_MethaneEngineHeatTransfer
+        from MethaneEngineHeatTransfer import LOX_MethaneEngineHeatTransfer
         from unittest.mock import Mock, patch
         
-        with patch('your_module.REFPROPFluid') as mock_refprop:
+        with patch('MethaneEngineHeatTransfer.REFPROPFluid') as mock_refprop:
             # 模拟物性计算
             mock_refprop_instance = Mock()
             mock_refprop_instance.get_methane_properties.return_value = {

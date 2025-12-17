@@ -1,0 +1,978 @@
+================================================= test session starts =================================================
+platform win32 -- Python 3.11.2, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\Administrator\AppData\Local\Programs\Python\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: D:\code\MethaneEngineHeatTransfer
+plugins: anyio-3.6.1
+collecting ... collected 14 items
+
+test_engine_analysis.py::TestEngineAnalysis::test_geometry_loader_initialization [2025-12-16 19:20:53] INFO: 参数文件加载成功: parameters.json
+PASSED
+test_engine_analysis.py::TestEngineAnalysis::test_geometry_loading FAILED
+test_engine_analysis.py::TestEngineAnalysis::test_diameter_calculation PASSED
+test_engine_analysis.py::TestEngineAnalysis::test_engine_initialization [2025-12-16 19:20:55] WARNING: 几何数据未加载，无法从几何文件更新参数
+FAILED
+test_engine_analysis.py::TestEngineAnalysis::test_geometry_parameter_setting [2025-12-16 19:20:55] WARNING: 几何数据未加载，无法从几何文件更新参数
+FAILED
+test_engine_analysis.py::TestEngineAnalysis::test_local_geometry_calculation [2025-12-16 19:20:55] WARNING: 几何数据未加载，无法从几何文件更新参数
+FAILED
+test_engine_analysis.py::TestEngineAnalysis::test_flow_area_calculation [2025-12-16 19:20:55] WARNING: 几何数据未加载，无法从几何文件更新参数
+FAILED
+test_engine_analysis.py::TestEngineAnalysis::test_methane_properties[300-10000000.0] PASSED
+test_engine_analysis.py::TestEngineAnalysis::test_methane_properties[100-5000000.0] PASSED
+test_engine_analysis.py::TestEngineAnalysis::test_methane_properties[500-20000000.0] PASSED
+test_engine_analysis.py::TestEngineAnalysis::test_heat_balance_solution [2025-12-16 19:20:56] WARNING: 几何数据未加载，无法从几何文件更新参数
+FAILED
+test_engine_analysis.py::TestEngineAnalysis::test_axial_distribution_calculation [2025-12-16 19:20:56] WARNING: 几何数据未加载，无法从几何文件更新参数
+FAILED
+test_engine_analysis.py::TestIntegration::test_end_to_end_analysis [2025-12-16 19:20:56] INFO: 液氧/甲烷发动机再生冷却传热计算（集成真实几何数据）
+[2025-12-16 19:20:56] INFO: ============================================================
+[2025-12-16 19:20:56] INFO: 字体配置完成，已禁用Unicode减号，使用ASCII减号
+[2025-12-16 19:20:56] INFO: 1. 初始化发动机计算环境...
+[2025-12-16 19:20:56] INFO: 开始加载几何文件: AE-1305.txt
+[2025-12-16 19:20:56] INFO: 文件总行数: 194
+[2025-12-16 19:20:56] INFO: 几何数据加载成功 - 有效点数量: 32580
+[2025-12-16 19:20:56] INFO: - 头部信息: {'Lc': 181.76153, 'Rc': 32.19783, 'R1': 19.3187, 'R2': 62.43902, 'bc': 30.0, 'Rt': 12.87913, 'Le': 86.37848, 'Re': 35.64633, 'Rn': 4.91983, 'c1': 22.7456, 'c2': 8.0}
+[2025-12-16 19:20:56] INFO: 根据几何文件更新总长度为: 0.268 m
+[2025-12-16 19:20:56] INFO: 从头部信息Rt参数获取喉部直径: 0.026 m
+[2025-12-16 19:20:56] INFO: 最终设置的喉部直径为: 0.026 m
+[2025-12-16 19:20:56] INFO: 几何文件验证: 存在=True, 格式正确=True, 样例点数=5
+[2025-12-16 19:20:56] INFO: 开始加载几何文件: AE-1305.txt
+[2025-12-16 19:20:56] INFO: 文件总行数: 194
+[2025-12-16 19:20:56] INFO: 几何数据加载成功 - 有效点数量: 32580
+[2025-12-16 19:20:56] INFO: - 头部信息: {'Lc': 181.76153, 'Rc': 32.19783, 'R1': 19.3187, 'R2': 62.43902, 'bc': 30.0, 'Rt': 12.87913, 'Le': 86.37848, 'Re': 35.64633, 'Rn': 4.91983, 'c1': 22.7456, 'c2': 8.0}
+[2025-12-16 19:20:56] INFO: 几何文件加载成功，将使用真实几何数据
+[2025-12-16 19:20:56] INFO: 2. 验证几何数据加载...
+[2025-12-16 19:20:56] INFO: 几何数据验证:
+[2025-12-16 19:20:56] INFO: • 数据点数量: 32580
+[2025-12-16 19:20:56] INFO: • 发动机总长度: 0.268 m
+[2025-12-16 19:20:56] INFO: • 喉部直径: 0.026 m
+[2025-12-16 19:20:56] INFO: 3. 配置冷却系统几何参数...
+[2025-12-16 19:20:56] INFO: 几何参数配置完成
+[2025-12-16 19:20:56] INFO: 4. 进行CEA燃烧性能分析...
+[2025-12-16 19:20:56] INFO: 进行混合比影响分析...
+[2025-12-16 19:20:56] ERROR: 混合比3.2分析失败: '>' not supported between instances of 'MagicMock' and 'float'
+[2025-12-16 19:20:56] INFO: 进行面积比影响分析...
+[2025-12-16 19:20:56] ERROR: 主函数执行失败: '<' not supported between instances of 'MagicMock' and 'int'
+[2025-12-16 19:20:56] ERROR: 详细错误信息: Traceback (most recent call last):
+  File "D:\code\MethaneEngineHeatTransfer\MethaneEngineHeatTransfer.py", line 3525, in main
+    combustion_analysis = engine.analyze_combustion_performance(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\code\MethaneEngineHeatTransfer\MethaneEngineHeatTransfer.py", line 1578, in analyze_combustion_performance
+    if max(isp_values) - min(isp_values) < 10:  # 比冲变化过小
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: '<' not supported between instances of 'MagicMock' and 'int'
+
+[2025-12-16 19:20:56] ERROR: 程序终止
+FAILED
+test_engine_analysis.py::test_parameter_validation [2025-12-16 19:20:56] WARNING: 参数文件 nonexistent.json 未找到，使用默认参数
+PASSED
+
+====================================================== FAILURES =======================================================
+______________________________________ TestEngineAnalysis.test_geometry_loading _______________________________________
+
+self = <test_engine_analysis.TestEngineAnalysis object at 0x000002555F3D2590>
+mock_geometry_data = {'header': {'Lc': 169.83604, 'Rc': 50.0, 'Re': 80.0, 'Rt': 15.0}, 'points': [(0, 100), (50, 80), (100, 50), (150, 30), (200, 30), (250, 40), ...]}
+
+    def test_geometry_loading(self, mock_geometry_data):
+        """测试几何数据加载"""
+        from MethaneEngineHeatTransfer import EngineGeometry
+    
+        geometry = EngineGeometry()
+    
+        # 模拟文件读取
+        with patch('builtins.open', unittest.mock.mock_open()) as mock_file:
+            with patch('MethaneEngineHeatTransfer.logger') as mock_logger:
+                # 模拟文件内容
+                mock_file.return_value.__iter__.return_value = [
+                    "# 测试几何文件",
+                    "Lc=169.83604",
+                    "Rc=50.0",
+                    "#------数据开始------",
+                    "0.0 100.0",
+                    "50.0 80.0",
+                    "100.0 50.0"
+                ]
+    
+                result = geometry.load_geometry_from_file("test_file.txt")
+                assert result is True
+                assert geometry.shape_data is not None
+>               assert len(geometry.shape_data['points']) > 0
+E               assert 0 > 0
+E                +  where 0 = len([])
+
+test_engine_analysis.py:80: AssertionError
+____________________________________ TestEngineAnalysis.test_engine_initialization ____________________________________
+
+self = <test_engine_analysis.TestEngineAnalysis object at 0x000002555F3D3450>
+mock_params = {'calculation_settings': {'max_allowable_temp': 1100.0, 'num_segments': 10}, 'engine_geometry': {'L_chamber': 0.257, 'd_throat': 0.0625, 'delta_fin': 0.012, 'delta_wall': 0.002, ...}}
+
+    def test_engine_initialization(self, mock_params):
+        """测试发动机初始化"""
+        with patch('MethaneEngineHeatTransfer.CEACalculator') as mock_cea:
+            with patch('MethaneEngineHeatTransfer.REFPROPFluid') as mock_refprop:
+                from MethaneEngineHeatTransfer import LOX_MethaneEngineHeatTransfer
+    
+                mock_cea_instance = Mock()
+                mock_cea.return_value = mock_cea_instance
+                mock_refprop_instance = Mock()
+                mock_refprop.return_value = mock_refprop_instance
+    
+>               engine = LOX_MethaneEngineHeatTransfer(
+                    refprop_path=None,
+                    use_cea=True,
+                    engine_shape_file=None
+                )
+
+test_engine_analysis.py:108: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <MethaneEngineHeatTransfer.LOX_MethaneEngineHeatTransfer object at 0x0000025571B0FC10>, refprop_path = None
+use_cea = True, engine_shape_file = None
+
+    def __init__(self, refprop_path=None, use_cea=True, engine_shape_file=None):
+        """
+        初始化发动机传热计算器
+    
+        参数:
+        refprop_path: REFPROP数据库安装路径 [str]，如未指定则自动搜索常见安装位置
+        use_cea: 是否启用CEA燃烧计算 [bool]，True表示启用NASA CEA计算燃烧产物性质
+        engine_shape_file: 发动机几何数据文件路径 [str]，包含发动机轮廓坐标数据
+        """
+        # 物理常数
+        self.R = 8.314  # 通用气体常数 [J/(mol·K)]
+    
+        # 甲烷临界参数
+        self.T_CRITICAL_METHANE = 190.56
+        self.P_CRITICAL_METHANE = 4.599e6
+    
+        # 几何参数存储
+        self.geometry = {
+            'diameter': {},
+            'length': {},
+            'wall_thickness': {},
+            'cooling_channels': {}
+        }
+    
+        self._geometry_configured = False
+    
+        self.geometry_loader = EngineGeometry(engine_shape_file)
+        self._update_geometry_from_shape_file()
+    
+        # 创建CEA计算器（如果启用）
+        self.cea_calculator = None
+        cr = 6.25
+        if use_cea:
+>           Rc = self.geometry_loader.shape_data['header'].get('Rc', None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: 'NoneType' object is not subscriptable
+
+MethaneEngineHeatTransfer.py:1101: TypeError
+-------------------------------------------------- Captured log call --------------------------------------------------
+WARNING  MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1123 几何数据未加载，无法从几何文件更新参数
+_________________________________ TestEngineAnalysis.test_geometry_parameter_setting __________________________________
+
+self = <test_engine_analysis.TestEngineAnalysis object at 0x000002555F3D2710>
+mock_params = {'calculation_settings': {'max_allowable_temp': 1100.0, 'num_segments': 10}, 'engine_geometry': {'L_chamber': 0.257, 'd_throat': 0.0625, 'delta_fin': 0.012, 'delta_wall': 0.002, ...}}
+
+    def test_geometry_parameter_setting(self, mock_params):
+        """测试几何参数设置"""
+        with patch('MethaneEngineHeatTransfer.CEACalculator') as mock_cea:
+            with patch('MethaneEngineHeatTransfer.REFPROPFluid') as mock_refprop:
+                from MethaneEngineHeatTransfer import LOX_MethaneEngineHeatTransfer
+    
+>               engine = LOX_MethaneEngineHeatTransfer()
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_engine_analysis.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <MethaneEngineHeatTransfer.LOX_MethaneEngineHeatTransfer object at 0x0000025573594490>, refprop_path = None
+use_cea = True, engine_shape_file = None
+
+    def __init__(self, refprop_path=None, use_cea=True, engine_shape_file=None):
+        """
+        初始化发动机传热计算器
+    
+        参数:
+        refprop_path: REFPROP数据库安装路径 [str]，如未指定则自动搜索常见安装位置
+        use_cea: 是否启用CEA燃烧计算 [bool]，True表示启用NASA CEA计算燃烧产物性质
+        engine_shape_file: 发动机几何数据文件路径 [str]，包含发动机轮廓坐标数据
+        """
+        # 物理常数
+        self.R = 8.314  # 通用气体常数 [J/(mol·K)]
+    
+        # 甲烷临界参数
+        self.T_CRITICAL_METHANE = 190.56
+        self.P_CRITICAL_METHANE = 4.599e6
+    
+        # 几何参数存储
+        self.geometry = {
+            'diameter': {},
+            'length': {},
+            'wall_thickness': {},
+            'cooling_channels': {}
+        }
+    
+        self._geometry_configured = False
+    
+        self.geometry_loader = EngineGeometry(engine_shape_file)
+        self._update_geometry_from_shape_file()
+    
+        # 创建CEA计算器（如果启用）
+        self.cea_calculator = None
+        cr = 6.25
+        if use_cea:
+>           Rc = self.geometry_loader.shape_data['header'].get('Rc', None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: 'NoneType' object is not subscriptable
+
+MethaneEngineHeatTransfer.py:1101: TypeError
+-------------------------------------------------- Captured log call --------------------------------------------------
+WARNING  MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1123 几何数据未加载，无法从几何文件更新参数
+_________________________________ TestEngineAnalysis.test_local_geometry_calculation __________________________________
+
+self = <test_engine_analysis.TestEngineAnalysis object at 0x000002555F3D3B90>
+mock_params = {'calculation_settings': {'max_allowable_temp': 1100.0, 'num_segments': 10}, 'engine_geometry': {'L_chamber': 0.257, 'd_throat': 0.0625, 'delta_fin': 0.012, 'delta_wall': 0.002, ...}}
+
+    def test_local_geometry_calculation(self, mock_params):
+        """测试局部几何计算"""
+        with patch('MethaneEngineHeatTransfer.CEACalculator') as mock_cea:
+            with patch('MethaneEngineHeatTransfer.REFPROPFluid') as mock_refprop:
+                from MethaneEngineHeatTransfer import LOX_MethaneEngineHeatTransfer
+    
+>               engine = LOX_MethaneEngineHeatTransfer()
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_engine_analysis.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <MethaneEngineHeatTransfer.LOX_MethaneEngineHeatTransfer object at 0x000002557350FC50>, refprop_path = None
+use_cea = True, engine_shape_file = None
+
+    def __init__(self, refprop_path=None, use_cea=True, engine_shape_file=None):
+        """
+        初始化发动机传热计算器
+    
+        参数:
+        refprop_path: REFPROP数据库安装路径 [str]，如未指定则自动搜索常见安装位置
+        use_cea: 是否启用CEA燃烧计算 [bool]，True表示启用NASA CEA计算燃烧产物性质
+        engine_shape_file: 发动机几何数据文件路径 [str]，包含发动机轮廓坐标数据
+        """
+        # 物理常数
+        self.R = 8.314  # 通用气体常数 [J/(mol·K)]
+    
+        # 甲烷临界参数
+        self.T_CRITICAL_METHANE = 190.56
+        self.P_CRITICAL_METHANE = 4.599e6
+    
+        # 几何参数存储
+        self.geometry = {
+            'diameter': {},
+            'length': {},
+            'wall_thickness': {},
+            'cooling_channels': {}
+        }
+    
+        self._geometry_configured = False
+    
+        self.geometry_loader = EngineGeometry(engine_shape_file)
+        self._update_geometry_from_shape_file()
+    
+        # 创建CEA计算器（如果启用）
+        self.cea_calculator = None
+        cr = 6.25
+        if use_cea:
+>           Rc = self.geometry_loader.shape_data['header'].get('Rc', None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: 'NoneType' object is not subscriptable
+
+MethaneEngineHeatTransfer.py:1101: TypeError
+-------------------------------------------------- Captured log call --------------------------------------------------
+WARNING  MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1123 几何数据未加载，无法从几何文件更新参数
+____________________________________ TestEngineAnalysis.test_flow_area_calculation ____________________________________
+
+self = <test_engine_analysis.TestEngineAnalysis object at 0x000002555F3D3F10>
+mock_params = {'calculation_settings': {'max_allowable_temp': 1100.0, 'num_segments': 10}, 'engine_geometry': {'L_chamber': 0.257, 'd_throat': 0.0625, 'delta_fin': 0.012, 'delta_wall': 0.002, ...}}
+
+    def test_flow_area_calculation(self, mock_params):
+        """测试流通面积计算"""
+        with patch('MethaneEngineHeatTransfer.CEACalculator') as mock_cea:
+            with patch('MethaneEngineHeatTransfer.REFPROPFluid') as mock_refprop:
+                from MethaneEngineHeatTransfer import LOX_MethaneEngineHeatTransfer
+    
+>               engine = LOX_MethaneEngineHeatTransfer()
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_engine_analysis.py:164: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <MethaneEngineHeatTransfer.LOX_MethaneEngineHeatTransfer object at 0x0000025572409350>, refprop_path = None
+use_cea = True, engine_shape_file = None
+
+    def __init__(self, refprop_path=None, use_cea=True, engine_shape_file=None):
+        """
+        初始化发动机传热计算器
+    
+        参数:
+        refprop_path: REFPROP数据库安装路径 [str]，如未指定则自动搜索常见安装位置
+        use_cea: 是否启用CEA燃烧计算 [bool]，True表示启用NASA CEA计算燃烧产物性质
+        engine_shape_file: 发动机几何数据文件路径 [str]，包含发动机轮廓坐标数据
+        """
+        # 物理常数
+        self.R = 8.314  # 通用气体常数 [J/(mol·K)]
+    
+        # 甲烷临界参数
+        self.T_CRITICAL_METHANE = 190.56
+        self.P_CRITICAL_METHANE = 4.599e6
+    
+        # 几何参数存储
+        self.geometry = {
+            'diameter': {},
+            'length': {},
+            'wall_thickness': {},
+            'cooling_channels': {}
+        }
+    
+        self._geometry_configured = False
+    
+        self.geometry_loader = EngineGeometry(engine_shape_file)
+        self._update_geometry_from_shape_file()
+    
+        # 创建CEA计算器（如果启用）
+        self.cea_calculator = None
+        cr = 6.25
+        if use_cea:
+>           Rc = self.geometry_loader.shape_data['header'].get('Rc', None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: 'NoneType' object is not subscriptable
+
+MethaneEngineHeatTransfer.py:1101: TypeError
+-------------------------------------------------- Captured log call --------------------------------------------------
+WARNING  MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1123 几何数据未加载，无法从几何文件更新参数
+____________________________________ TestEngineAnalysis.test_heat_balance_solution ____________________________________
+
+self = <test_engine_analysis.TestEngineAnalysis object at 0x000002555F3D9910>
+mock_params = {'calculation_settings': {'max_allowable_temp': 1100.0, 'num_segments': 10}, 'engine_geometry': {'L_chamber': 0.257, 'd_throat': 0.0625, 'delta_fin': 0.012, 'delta_wall': 0.002, ...}}
+
+    def test_heat_balance_solution(self, mock_params):
+        """测试热平衡方程求解"""
+        with patch('MethaneEngineHeatTransfer.CEACalculator') as mock_cea:
+            with patch('MethaneEngineHeatTransfer.REFPROPFluid') as mock_refprop:
+                from MethaneEngineHeatTransfer import LOX_MethaneEngineHeatTransfer
+                from scipy.optimize import fsolve
+    
+>               engine = LOX_MethaneEngineHeatTransfer()
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_engine_analysis.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <MethaneEngineHeatTransfer.LOX_MethaneEngineHeatTransfer object at 0x00000255723AF910>, refprop_path = None
+use_cea = True, engine_shape_file = None
+
+    def __init__(self, refprop_path=None, use_cea=True, engine_shape_file=None):
+        """
+        初始化发动机传热计算器
+    
+        参数:
+        refprop_path: REFPROP数据库安装路径 [str]，如未指定则自动搜索常见安装位置
+        use_cea: 是否启用CEA燃烧计算 [bool]，True表示启用NASA CEA计算燃烧产物性质
+        engine_shape_file: 发动机几何数据文件路径 [str]，包含发动机轮廓坐标数据
+        """
+        # 物理常数
+        self.R = 8.314  # 通用气体常数 [J/(mol·K)]
+    
+        # 甲烷临界参数
+        self.T_CRITICAL_METHANE = 190.56
+        self.P_CRITICAL_METHANE = 4.599e6
+    
+        # 几何参数存储
+        self.geometry = {
+            'diameter': {},
+            'length': {},
+            'wall_thickness': {},
+            'cooling_channels': {}
+        }
+    
+        self._geometry_configured = False
+    
+        self.geometry_loader = EngineGeometry(engine_shape_file)
+        self._update_geometry_from_shape_file()
+    
+        # 创建CEA计算器（如果启用）
+        self.cea_calculator = None
+        cr = 6.25
+        if use_cea:
+>           Rc = self.geometry_loader.shape_data['header'].get('Rc', None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: 'NoneType' object is not subscriptable
+
+MethaneEngineHeatTransfer.py:1101: TypeError
+-------------------------------------------------- Captured log call --------------------------------------------------
+WARNING  MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1123 几何数据未加载，无法从几何文件更新参数
+_______________________________ TestEngineAnalysis.test_axial_distribution_calculation ________________________________
+
+self = <test_engine_analysis.TestEngineAnalysis object at 0x000002555F3D9FD0>
+mock_params = {'calculation_settings': {'max_allowable_temp': 1100.0, 'num_segments': 10}, 'engine_geometry': {'L_chamber': 0.257, 'd_throat': 0.0625, 'delta_fin': 0.012, 'delta_wall': 0.002, ...}}
+
+    def test_axial_distribution_calculation(self, mock_params):
+        """测试轴向分布计算"""
+        with patch('MethaneEngineHeatTransfer.CEACalculator') as mock_cea:
+            with patch('MethaneEngineHeatTransfer.REFPROPFluid') as mock_refprop:
+                from MethaneEngineHeatTransfer import LOX_MethaneEngineHeatTransfer
+    
+>               engine = LOX_MethaneEngineHeatTransfer()
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_engine_analysis.py:262: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <MethaneEngineHeatTransfer.LOX_MethaneEngineHeatTransfer object at 0x000002557356D450>, refprop_path = None
+use_cea = True, engine_shape_file = None
+
+    def __init__(self, refprop_path=None, use_cea=True, engine_shape_file=None):
+        """
+        初始化发动机传热计算器
+    
+        参数:
+        refprop_path: REFPROP数据库安装路径 [str]，如未指定则自动搜索常见安装位置
+        use_cea: 是否启用CEA燃烧计算 [bool]，True表示启用NASA CEA计算燃烧产物性质
+        engine_shape_file: 发动机几何数据文件路径 [str]，包含发动机轮廓坐标数据
+        """
+        # 物理常数
+        self.R = 8.314  # 通用气体常数 [J/(mol·K)]
+    
+        # 甲烷临界参数
+        self.T_CRITICAL_METHANE = 190.56
+        self.P_CRITICAL_METHANE = 4.599e6
+    
+        # 几何参数存储
+        self.geometry = {
+            'diameter': {},
+            'length': {},
+            'wall_thickness': {},
+            'cooling_channels': {}
+        }
+    
+        self._geometry_configured = False
+    
+        self.geometry_loader = EngineGeometry(engine_shape_file)
+        self._update_geometry_from_shape_file()
+    
+        # 创建CEA计算器（如果启用）
+        self.cea_calculator = None
+        cr = 6.25
+        if use_cea:
+>           Rc = self.geometry_loader.shape_data['header'].get('Rc', None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: 'NoneType' object is not subscriptable
+
+MethaneEngineHeatTransfer.py:1101: TypeError
+-------------------------------------------------- Captured log call --------------------------------------------------
+WARNING  MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1123 几何数据未加载，无法从几何文件更新参数
+______________________________________ TestIntegration.test_end_to_end_analysis _______________________________________
+
+self = <test_engine_analysis.TestIntegration object at 0x000002555F3DA7D0>
+
+    def test_end_to_end_analysis(self):
+        """端到端分析测试"""
+        # 这个测试会运行完整的分析流程
+        with patch('MethaneEngineHeatTransfer.setup_logging') as mock_logging:
+            with patch('MethaneEngineHeatTransfer.load_parameters') as mock_load_params:
+                with patch('MethaneEngineHeatTransfer.CEACalculator') as mock_cea:
+                    with patch('MethaneEngineHeatTransfer.REFPROPFluid') as mock_refprop:
+    
+                        # 模拟参数加载
+                        mock_load_params.return_value = {
+                            "engine_geometry": {
+                                "d_throat": 0.0625, "L_chamber": 0.257,
+                                "delta_wall": 0.002, "number_of_fins": 36,
+                                "t_fin": 0.0008, "h_fin": 0.008, "delta_fin": 0.012
+                            },
+                            "calculation_settings": {"num_segments": 5}
+                        }
+    
+                        # 模拟主函数
+                        from MethaneEngineHeatTransfer import main
+                        result = main()
+    
+                        # 检查是否返回了结果（即使是None也表示执行完成）
+>                       assert result is not None
+E                       assert None is not None
+
+test_engine_analysis.py:333: AssertionError
+-------------------------------------------------- Captured log call --------------------------------------------------
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3449 液氧/甲烷发动机再生冷却传热计算（集成真实几何数据）
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3450 ============================================================
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:193 字体配置完成，已禁用Unicode减号，使用ASCII减号
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3456 1. 初始化发动机计算环境...
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:382 开始加载几何文件: AE-1305.txt
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:389 文件总行数: 194
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:393 文件预览行: #
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:393 文件预览行: # Engine name:
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:393 文件预览行: # 周四 12月 11 18:10:18 2025
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:393 文件预览行: #
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:393 文件预览行: # Lc= 181.76153 mm	 Rc=  32.19783 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第1行内容: #
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第2行内容: # Engine name:
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第3行内容: # 周四 12月 11 18:10:18 2025
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第4行内容: #
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第5行内容: # Lc= 181.76153 mm	 Rc=  32.19783 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Lc = 181.76153
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Rc = 32.19783
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第6行内容: # R1=  19.31870 mm	 R2=  62.43902 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: R1 = 19.3187
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: R2 = 62.43902
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第7行内容: # bc=  30.00000   	 Rt=  12.87913 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: bc = 30.0
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Rt = 12.87913
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第8行内容: # Le=  86.37848 mm	 Re=  35.64633 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Le = 86.37848
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Re = 35.64633
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第9行内容: # Rn=   4.91983 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Rn = 4.91983
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第10行内容: # c1=  22.74560   	 c2=   8.00000
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: c1 = 22.7456
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: c2 = 8.0
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第11行内容: #
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第12行内容: #--------------------------
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:410 第12行检测到数据段分隔符
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第13行内容: #     x, mm	      r, mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第14行内容: #--------------------------
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:410 第14行检测到数据段分隔符
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第15行内容: 0.00000	   32.19783
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第16行内容: 126.39365	   32.19783
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第17行内容: 127.52094	   32.18765
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第18行内容: 128.64785	   32.15713
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第19行内容: 129.77403	   32.10626
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第20行内容: 130.89911	   32.03507
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第21行内容: 132.02272	   31.94357
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第22行内容: 133.14450	   31.83181
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第23行内容: 134.26407	   31.69981
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第24行内容: 135.38108	   31.54762
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第25行内容: 136.49516	   31.37529
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第26行内容: 137.60595	   31.18287
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第27行内容: 138.71308	   30.97044
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第28行内容: 139.81619	   30.73804
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第29行内容: 140.91493	   30.48577
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第30行内容: 142.00894	   30.21370
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第31行内容: 143.09786	   29.92193
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第32行内容: 144.18133	   29.61054
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第33行内容: 145.25900	   29.27965
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第34行内容: 146.33053	   28.92935
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第35行内容: 147.39555	   28.55976
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第36行内容: 148.45373	   28.17100
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第37行内容: 149.50471	   27.76321
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第38行内容: 150.54817	   27.33650
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第39行内容: 151.58375	   26.89103
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第40行内容: 152.61111	   26.42693
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第41行内容: 153.62994	   25.94436
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第42行内容: 154.63988	   25.44348
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第43行内容: 155.64061	   24.92444
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第44行内容: 156.63182	   24.38742
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第45行内容: 157.61316	   23.83259
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第46行内容: 172.10218	   15.46735
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第47行内容: 172.40581	   15.29568
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第48行内容: 172.71249	   15.12953
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第49行内容: 173.02212	   14.96894
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第50行内容: 173.33460	   14.81396
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第51行内容: 173.64982	   14.66465
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第52行内容: 173.96769	   14.52106
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第53行内容: 174.28810	   14.38323
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第54行内容: 174.61095	   14.25121
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第55行内容: 174.93612	   14.12504
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第56行内容: 175.26352	   14.00476
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第57行内容: 175.59304	   13.89040
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第58行内容: 175.92457	   13.78202
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第59行内容: 176.25801	   13.67964
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第60行内容: 176.59323	   13.58330
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第61行内容: 176.93015	   13.49302
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第62行内容: 177.26863	   13.40885
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第63行内容: 177.60858	   13.33079
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第64行内容: 177.94989	   13.25889
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第65行内容: 178.29244	   13.19316
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第66行内容: 178.63612	   13.13363
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第67行内容: 178.98081	   13.08031
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第68行内容: 179.32642	   13.03322
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第69行内容: 179.67281	   12.99238
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第70行内容: 180.01989	   12.95780
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第71行内容: 180.36754	   12.92949
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第72行内容: 180.71564	   12.90746
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第73行内容: 181.06408	   12.89173
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第74行内容: 181.41275	   12.88228
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第75行内容: 181.76153	   12.87913
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第76行内容: 181.93905	   12.88234
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第77行内容: 182.02773	   12.88634
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第78行内容: 182.11633	   12.89194
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第79行内容: 182.20482	   12.89914
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第80行内容: 182.29316	   12.90794
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第81行内容: 182.38132	   12.91833
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第82行内容: 182.46929	   12.93031
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第83行内容: 182.55702	   12.94387
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第84行内容: 182.64450	   12.95901
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第85行内容: 182.73168	   12.97573
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第86行内容: 182.81855	   12.99402
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第87行内容: 182.90508	   13.01388
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第88行内容: 182.99124	   13.03529
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第89行内容: 183.07699	   13.05826
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第90行内容: 183.16232	   13.08276
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第91行内容: 183.24719	   13.10881
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第92行内容: 183.33157	   13.13638
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第93行内容: 183.41545	   13.16547
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第94行内容: 183.49879	   13.19606
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第95行内容: 183.58156	   13.22816
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第96行内容: 183.66374	   13.26174
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第97行内容: 184.52752	   13.62211
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第98行内容: 185.39131	   13.97914
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第99行内容: 186.25509	   14.33285
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第100行内容: 187.11887	   14.68323
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第101行内容: 187.98266	   15.03022
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第102行内容: 188.84644	   15.37397
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第103行内容: 189.71023	   15.71450
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第104行内容: 190.57401	   16.05181
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第105行内容: 191.43780	   16.38583
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第106行内容: 192.30158	   16.71671
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第107行内容: 193.16537	   17.04446
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第108行内容: 194.02915	   17.36910
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第109行内容: 194.89294	   17.69060
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第110行内容: 195.75672	   18.00898
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第111行内容: 196.62051	   18.32433
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第112行内容: 197.48429	   18.63667
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第113行内容: 198.34808	   18.94602
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第114行内容: 199.21186	   19.25237
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第115行内容: 200.07565	   19.55569
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第116行内容: 200.93943	   19.85608
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第117行内容: 201.80322	   20.15357
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第118行内容: 202.66700	   20.44817
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第119行内容: 203.53078	   20.73991
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第120行内容: 204.39457	   21.02880
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第121行内容: 205.25835	   21.31477
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第122行内容: 206.12214	   21.59794
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第123行内容: 206.98592	   21.87833
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第124行内容: 207.84971	   22.15594
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第125行内容: 208.71349	   22.43081
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第126行内容: 209.57728	   22.70295
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第127行内容: 210.44106	   22.97237
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第128行内容: 211.30485	   23.23910
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第129行内容: 212.16863	   23.50312
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第130行内容: 213.03242	   23.76446
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第131行内容: 213.89620	   24.02316
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第132行内容: 214.75999	   24.27924
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第133行内容: 215.62377	   24.53272
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第134行内容: 216.48756	   24.78362
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第135行内容: 217.35134	   25.03194
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第136行内容: 218.21513	   25.27771
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第137行内容: 219.07891	   25.52095
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第138行内容: 219.94270	   25.76167
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第139行内容: 220.80648	   25.99989
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第140行内容: 221.67026	   26.23561
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第141行内容: 222.53405	   26.46887
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第142行内容: 223.39783	   26.69968
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第143行内容: 224.26162	   26.92805
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第144行内容: 225.12540	   27.15399
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第145行内容: 225.98919	   27.37752
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第146行内容: 226.85297	   27.59866
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第147行内容: 227.71676	   27.81742
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第148行内容: 228.58054	   28.03382
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第149行内容: 229.44433	   28.24787
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第150行内容: 230.30811	   28.45960
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第151行内容: 231.17190	   28.66902
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第152行内容: 232.03568	   28.87613
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第153行内容: 232.89947	   29.08096
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第154行内容: 233.76325	   29.28352
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第155行内容: 234.62704	   29.48383
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第156行内容: 235.49082	   29.68189
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第157行内容: 236.35461	   29.87771
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第158行内容: 237.21839	   30.07131
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第159行内容: 238.08217	   30.26271
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第160行内容: 238.94596	   30.45192
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第161行内容: 239.80974	   30.63895
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第162行内容: 240.67353	   30.82382
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第163行内容: 241.53731	   31.00655
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第164行内容: 242.40110	   31.18714
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第165行内容: 243.26488	   31.36560
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第166行内容: 244.12867	   31.54196
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第167行内容: 244.99245	   31.71622
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第168行内容: 245.85624	   31.88840
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第169行内容: 246.72002	   32.05850
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第170行内容: 247.58381	   32.22655
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第171行内容: 248.44759	   32.39255
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第172行内容: 249.31138	   32.55652
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第173行内容: 250.17516	   32.71847
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第174行内容: 251.03895	   32.87838
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第175行内容: 251.90273	   33.03627
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第176行内容: 252.76652	   33.19218
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第177行内容: 253.63030	   33.34611
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第178行内容: 254.49409	   33.49808
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第179行内容: 255.35787	   33.64809
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第180行内容: 256.22165	   33.79617
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第181行内容: 257.08544	   33.94232
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第182行内容: 257.94922	   34.08656
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第183行内容: 258.81301	   34.22886
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第184行内容: 259.67679	   34.36923
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第185行内容: 260.54058	   34.50772
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第186行内容: 261.40436	   34.64433
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第187行内容: 262.26815	   34.77908
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第188行内容: 263.13193	   34.91198
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第189行内容: 263.99572	   35.04304
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第190行内容: 264.85950	   35.17226
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第191行内容: 265.72329	   35.29960
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第192行内容: 266.58707	   35.42512
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第193行内容: 267.45086	   35.54884
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第194行内容: 268.14001	   35.64633
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:452 几何数据加载成功 - 有效点数量: 32580
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:453 - 头部信息: {'Lc': 181.76153, 'Rc': 32.19783, 'R1': 19.3187, 'R2': 62.43902, 'bc': 30.0, 'Rt': 12.87913, 'Le': 86.37848, 'Re': 35.64633, 'Rn': 4.91983, 'c1': 22.7456, 'c2': 8.0}
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1131 根据几何文件更新总长度为: 0.268 m
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1151 从头部信息Rt参数获取喉部直径: 0.026 m
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1171 最终设置的喉部直径为: 0.026 m
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1110 chamber_ratio = 6.250，已初始化CEA计算器
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:540 几何文件验证: 存在=True, 格式正确=True, 样例点数=5
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:382 开始加载几何文件: AE-1305.txt
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:389 文件总行数: 194
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:393 文件预览行: #
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:393 文件预览行: # Engine name:
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:393 文件预览行: # 周四 12月 11 18:10:18 2025
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:393 文件预览行: #
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:393 文件预览行: # Lc= 181.76153 mm	 Rc=  32.19783 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第1行内容: #
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第2行内容: # Engine name:
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第3行内容: # 周四 12月 11 18:10:18 2025
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第4行内容: #
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第5行内容: # Lc= 181.76153 mm	 Rc=  32.19783 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Lc = 181.76153
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Rc = 32.19783
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第6行内容: # R1=  19.31870 mm	 R2=  62.43902 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: R1 = 19.3187
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: R2 = 62.43902
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第7行内容: # bc=  30.00000   	 Rt=  12.87913 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: bc = 30.0
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Rt = 12.87913
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第8行内容: # Le=  86.37848 mm	 Re=  35.64633 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Le = 86.37848
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Re = 35.64633
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第9行内容: # Rn=   4.91983 mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: Rn = 4.91983
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第10行内容: # c1=  22.74560   	 c2=   8.00000
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: c1 = 22.7456
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:422 解析头部参数: c2 = 8.0
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第11行内容: #
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第12行内容: #--------------------------
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:410 第12行检测到数据段分隔符
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第13行内容: #     x, mm	      r, mm
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第14行内容: #--------------------------
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:410 第14行检测到数据段分隔符
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第15行内容: 0.00000	   32.19783
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第16行内容: 126.39365	   32.19783
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第17行内容: 127.52094	   32.18765
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第18行内容: 128.64785	   32.15713
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第19行内容: 129.77403	   32.10626
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第20行内容: 130.89911	   32.03507
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第21行内容: 132.02272	   31.94357
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第22行内容: 133.14450	   31.83181
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第23行内容: 134.26407	   31.69981
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第24行内容: 135.38108	   31.54762
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第25行内容: 136.49516	   31.37529
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第26行内容: 137.60595	   31.18287
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第27行内容: 138.71308	   30.97044
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第28行内容: 139.81619	   30.73804
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第29行内容: 140.91493	   30.48577
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第30行内容: 142.00894	   30.21370
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第31行内容: 143.09786	   29.92193
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第32行内容: 144.18133	   29.61054
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第33行内容: 145.25900	   29.27965
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第34行内容: 146.33053	   28.92935
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第35行内容: 147.39555	   28.55976
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第36行内容: 148.45373	   28.17100
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第37行内容: 149.50471	   27.76321
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第38行内容: 150.54817	   27.33650
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第39行内容: 151.58375	   26.89103
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第40行内容: 152.61111	   26.42693
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第41行内容: 153.62994	   25.94436
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第42行内容: 154.63988	   25.44348
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第43行内容: 155.64061	   24.92444
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第44行内容: 156.63182	   24.38742
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第45行内容: 157.61316	   23.83259
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第46行内容: 172.10218	   15.46735
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第47行内容: 172.40581	   15.29568
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第48行内容: 172.71249	   15.12953
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第49行内容: 173.02212	   14.96894
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第50行内容: 173.33460	   14.81396
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第51行内容: 173.64982	   14.66465
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第52行内容: 173.96769	   14.52106
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第53行内容: 174.28810	   14.38323
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第54行内容: 174.61095	   14.25121
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第55行内容: 174.93612	   14.12504
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第56行内容: 175.26352	   14.00476
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第57行内容: 175.59304	   13.89040
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第58行内容: 175.92457	   13.78202
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第59行内容: 176.25801	   13.67964
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第60行内容: 176.59323	   13.58330
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第61行内容: 176.93015	   13.49302
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第62行内容: 177.26863	   13.40885
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第63行内容: 177.60858	   13.33079
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第64行内容: 177.94989	   13.25889
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第65行内容: 178.29244	   13.19316
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第66行内容: 178.63612	   13.13363
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第67行内容: 178.98081	   13.08031
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第68行内容: 179.32642	   13.03322
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第69行内容: 179.67281	   12.99238
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第70行内容: 180.01989	   12.95780
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第71行内容: 180.36754	   12.92949
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第72行内容: 180.71564	   12.90746
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第73行内容: 181.06408	   12.89173
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第74行内容: 181.41275	   12.88228
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第75行内容: 181.76153	   12.87913
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第76行内容: 181.93905	   12.88234
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第77行内容: 182.02773	   12.88634
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第78行内容: 182.11633	   12.89194
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第79行内容: 182.20482	   12.89914
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第80行内容: 182.29316	   12.90794
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第81行内容: 182.38132	   12.91833
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第82行内容: 182.46929	   12.93031
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第83行内容: 182.55702	   12.94387
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第84行内容: 182.64450	   12.95901
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第85行内容: 182.73168	   12.97573
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第86行内容: 182.81855	   12.99402
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第87行内容: 182.90508	   13.01388
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第88行内容: 182.99124	   13.03529
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第89行内容: 183.07699	   13.05826
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第90行内容: 183.16232	   13.08276
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第91行内容: 183.24719	   13.10881
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第92行内容: 183.33157	   13.13638
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第93行内容: 183.41545	   13.16547
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第94行内容: 183.49879	   13.19606
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第95行内容: 183.58156	   13.22816
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第96行内容: 183.66374	   13.26174
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第97行内容: 184.52752	   13.62211
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第98行内容: 185.39131	   13.97914
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第99行内容: 186.25509	   14.33285
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第100行内容: 187.11887	   14.68323
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第101行内容: 187.98266	   15.03022
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第102行内容: 188.84644	   15.37397
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第103行内容: 189.71023	   15.71450
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第104行内容: 190.57401	   16.05181
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第105行内容: 191.43780	   16.38583
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第106行内容: 192.30158	   16.71671
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第107行内容: 193.16537	   17.04446
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第108行内容: 194.02915	   17.36910
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第109行内容: 194.89294	   17.69060
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第110行内容: 195.75672	   18.00898
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第111行内容: 196.62051	   18.32433
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第112行内容: 197.48429	   18.63667
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第113行内容: 198.34808	   18.94602
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第114行内容: 199.21186	   19.25237
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第115行内容: 200.07565	   19.55569
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第116行内容: 200.93943	   19.85608
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第117行内容: 201.80322	   20.15357
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第118行内容: 202.66700	   20.44817
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第119行内容: 203.53078	   20.73991
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第120行内容: 204.39457	   21.02880
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第121行内容: 205.25835	   21.31477
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第122行内容: 206.12214	   21.59794
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第123行内容: 206.98592	   21.87833
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第124行内容: 207.84971	   22.15594
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第125行内容: 208.71349	   22.43081
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第126行内容: 209.57728	   22.70295
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第127行内容: 210.44106	   22.97237
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第128行内容: 211.30485	   23.23910
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第129行内容: 212.16863	   23.50312
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第130行内容: 213.03242	   23.76446
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第131行内容: 213.89620	   24.02316
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第132行内容: 214.75999	   24.27924
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第133行内容: 215.62377	   24.53272
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第134行内容: 216.48756	   24.78362
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第135行内容: 217.35134	   25.03194
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第136行内容: 218.21513	   25.27771
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第137行内容: 219.07891	   25.52095
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第138行内容: 219.94270	   25.76167
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第139行内容: 220.80648	   25.99989
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第140行内容: 221.67026	   26.23561
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第141行内容: 222.53405	   26.46887
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第142行内容: 223.39783	   26.69968
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第143行内容: 224.26162	   26.92805
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第144行内容: 225.12540	   27.15399
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第145行内容: 225.98919	   27.37752
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第146行内容: 226.85297	   27.59866
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第147行内容: 227.71676	   27.81742
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第148行内容: 228.58054	   28.03382
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第149行内容: 229.44433	   28.24787
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第150行内容: 230.30811	   28.45960
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第151行内容: 231.17190	   28.66902
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第152行内容: 232.03568	   28.87613
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第153行内容: 232.89947	   29.08096
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第154行内容: 233.76325	   29.28352
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第155行内容: 234.62704	   29.48383
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第156行内容: 235.49082	   29.68189
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第157行内容: 236.35461	   29.87771
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第158行内容: 237.21839	   30.07131
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第159行内容: 238.08217	   30.26271
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第160行内容: 238.94596	   30.45192
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第161行内容: 239.80974	   30.63895
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第162行内容: 240.67353	   30.82382
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第163行内容: 241.53731	   31.00655
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第164行内容: 242.40110	   31.18714
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第165行内容: 243.26488	   31.36560
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第166行内容: 244.12867	   31.54196
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第167行内容: 244.99245	   31.71622
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第168行内容: 245.85624	   31.88840
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第169行内容: 246.72002	   32.05850
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第170行内容: 247.58381	   32.22655
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第171行内容: 248.44759	   32.39255
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第172行内容: 249.31138	   32.55652
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第173行内容: 250.17516	   32.71847
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第174行内容: 251.03895	   32.87838
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第175行内容: 251.90273	   33.03627
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第176行内容: 252.76652	   33.19218
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第177行内容: 253.63030	   33.34611
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第178行内容: 254.49409	   33.49808
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第179行内容: 255.35787	   33.64809
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第180行内容: 256.22165	   33.79617
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第181行内容: 257.08544	   33.94232
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第182行内容: 257.94922	   34.08656
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第183行内容: 258.81301	   34.22886
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第184行内容: 259.67679	   34.36923
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第185行内容: 260.54058	   34.50772
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第186行内容: 261.40436	   34.64433
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第187行内容: 262.26815	   34.77908
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第188行内容: 263.13193	   34.91198
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第189行内容: 263.99572	   35.04304
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第190行内容: 264.85950	   35.17226
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第191行内容: 265.72329	   35.29960
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第192行内容: 266.58707	   35.42512
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第193行内容: 267.45086	   35.54884
+DEBUG    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:405 第194行内容: 268.14001	   35.64633
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:452 几何数据加载成功 - 有效点数量: 32580
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:453 - 头部信息: {'Lc': 181.76153, 'Rc': 32.19783, 'R1': 19.3187, 'R2': 62.43902, 'bc': 30.0, 'Rt': 12.87913, 'Le': 86.37848, 'Re': 35.64633, 'Rn': 4.91983, 'c1': 22.7456, 'c2': 8.0}
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3485 几何文件加载成功，将使用真实几何数据
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3488 2. 验证几何数据加载...
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3495 几何数据验证:
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3496 • 数据点数量: 32580
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3502 • 发动机总长度: 0.268 m
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3505 • 喉部直径: 0.026 m
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3510 3. 配置冷却系统几何参数...
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1201 几何参数配置完成
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3523 4. 进行CEA燃烧性能分析...
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1543 进行混合比影响分析...
+ERROR    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1560 混合比3.2分析失败: '>' not supported between instances of 'MagicMock' and 'float'
+INFO     MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:1563 进行面积比影响分析...
+ERROR    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3705 主函数执行失败: '<' not supported between instances of 'MagicMock' and 'int'
+ERROR    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3707 详细错误信息: Traceback (most recent call last):
+  File "D:\code\MethaneEngineHeatTransfer\MethaneEngineHeatTransfer.py", line 3525, in main
+    combustion_analysis = engine.analyze_combustion_performance(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\code\MethaneEngineHeatTransfer\MethaneEngineHeatTransfer.py", line 1578, in analyze_combustion_performance
+    if max(isp_values) - min(isp_values) < 10:  # 比冲变化过小
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: '<' not supported between instances of 'MagicMock' and 'int'
+
+ERROR    MethaneEngineHeatTransfer:MethaneEngineHeatTransfer.py:3708 程序终止
+=============================================== short test summary info ===============================================
+FAILED test_engine_analysis.py::TestEngineAnalysis::test_geometry_loading - assert 0 > 0
+FAILED test_engine_analysis.py::TestEngineAnalysis::test_engine_initialization - TypeError: 'NoneType' object is not ...
+FAILED test_engine_analysis.py::TestEngineAnalysis::test_geometry_parameter_setting - TypeError: 'NoneType' object is...
+FAILED test_engine_analysis.py::TestEngineAnalysis::test_local_geometry_calculation - TypeError: 'NoneType' object is...
+FAILED test_engine_analysis.py::TestEngineAnalysis::test_flow_area_calculation - TypeError: 'NoneType' object is not ...
+FAILED test_engine_analysis.py::TestEngineAnalysis::test_heat_balance_solution - TypeError: 'NoneType' object is not ...
+FAILED test_engine_analysis.py::TestEngineAnalysis::test_axial_distribution_calculation - TypeError: 'NoneType' objec...
+FAILED test_engine_analysis.py::TestIntegration::test_end_to_end_analysis - assert None is not None
+============================================= 8 failed, 6 passed in 7.86s =============================================

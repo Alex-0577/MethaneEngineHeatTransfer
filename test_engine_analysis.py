@@ -343,5 +343,18 @@ def test_parameter_validation():
         assert 'engine_geometry' in params
 
 if __name__ == "__main__":
-    # 直接运行测试
-    pytest.main([__file__, "-v", "-s", "--result-log=test_log.txt"])
+    # 直接运行测试，并将输出保存到test_log.txt
+    import sys
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    
+    with open('test_log.txt', 'w', encoding='utf-8') as f:
+        sys.stdout = f
+        sys.stderr = f
+        try:
+            result = pytest.main([__file__, "-v", "-s"])
+        finally:
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
+    
+    print(f"测试完成，结果已保存到 test_log.txt，退出代码: {result}")

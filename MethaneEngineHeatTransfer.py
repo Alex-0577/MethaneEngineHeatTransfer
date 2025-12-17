@@ -24,6 +24,8 @@ from matplotlib.ticker import ScalarFormatter
 import functools
 from functools import lru_cache
 
+inf = float('inf')
+
 
 def setup_logging():
     """
@@ -426,16 +428,18 @@ class EngineGeometry:
                         logger.debug(f"第{i+1}行未找到有效参数")
                 
                 # 解析数据点（在数据段开始后）
-                if data_section_start and line and not line.startswith('#'):
-                    # 原有数据解析逻辑保持不变
-                    parts = line.split()
-                    if len(parts) >= 2:
-                        try:
-                            x = float(parts[0])
-                            r = float(parts[1])
-                            points.append((x, r))
-                        except ValueError as e:
-                            logger.warning(f"忽略无效数据行 {i+1}: {line}, 错误: {e}")
+                if data_section_start:
+                    for i, line in enumerate(lines):
+                        line = line.strip()
+                        if line and not line.startswith('#'):
+                            parts = line.split()
+                            if len(parts) >= 2:
+                                try:
+                                    x = float(parts[0])
+                                    r = float(parts[1])
+                                    points.append((x, r))
+                                except ValueError as e:
+                                    logger.warning(f"忽略无效数据行 {i+1}: {line}, 错误: {e}")
             
             # 存储结果
             self.shape_data['points'] = points
@@ -1094,7 +1098,7 @@ class LOX_MethaneEngineHeatTransfer:
         
         # 创建CEA计算器（如果启用）
         self.cea_calculator = None
-        cr = 0
+        cr = 6.25
         if use_cea:
             Rc = self.geometry_loader.shape_data['header'].get('Rc', None)
             Rt = self.geometry_loader.shape_data['header'].get('Rt', None)
@@ -1117,6 +1121,10 @@ class LOX_MethaneEngineHeatTransfer:
         从发动机几何文件中提取关键几何参数并更新类属性
         包括总长度、喉部直径等关键尺寸
         """
+        if self.geometry_loader.shape_data is None:
+            logger.warning("几何数据未加载，无法从几何文件更新参数")
+            return
+
         if self.geometry_loader.shape_data:
             # 更新总长度
             total_length = self.geometry_loader.get_total_length()
@@ -1530,7 +1538,7 @@ class LOX_MethaneEngineHeatTransfer:
             'mixture_ratio_analysis': [],
             'area_ratio_analysis': [],
             'optimal_mixture_ratio': None,
-            'max_spscific_impulse': 0.0
+            'max_specific_impulse': 0.0
         }
         
         # 混合比影响分析
@@ -3548,7 +3556,8 @@ def main():
                 'm_dot_coolant': eng_cond['m_dot_coolant'],
                 'T_coolant_in': eng_cond['T_coolant_in'],
                 'P_coolant_in': eng_cond['P_coolant_in_MPa'] * 1e6,  # MPa转换为Pa
-                'mixture_ratio': eng_cond['mixture_ratio']
+                'mixture_ratio': eng_cond['mixture_ratio'],
+                'film_cooling': eng_cond['film_cooling']
             }
             logger.info(f"使用最优混合比: O/F={optimal_mr['mixture_ratio']:.1f}")
         else:
@@ -3559,12 +3568,16 @@ def main():
                 'm_dot_coolant': 4.5,
                 'T_coolant_in': 110.0,
                 'P_coolant_in': 18e6,
-                'mixture_ratio': 3.4
+                'mixture_ratio': 3.4,
+                'film_cooling': {
+                    'start_position': 0,
+                    'liquid_film_end': 0,
+                }
             }
         
         film_cooling_params = {
-            'start_position': 0.05,  # 膜冷却起始位置 [m]
-            'liquid_film_end': 0.15,  # 液膜结束位置 [m]
+            'start_position': engine_conditions['film_cooling']['start_position'],  # 膜冷却起始位置 [m]
+            'liquid_film_end': engine_conditions['film_cooling']['liquid_film_end'],  # 液膜结束位置 [m]
             'film_flow_rate': engine_conditions['m_dot_coolant'] * 0.1,  # 膜冷却流量
             'film_temperature': engine_conditions['T_coolant_in']
         }
