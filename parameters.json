@@ -42,7 +42,7 @@
     },
     "file_paths": {
         "refprop_path": "C:\\Program Files (x86)\\REFPROP",
-        "engine_shape_file": "AE-1305.txt",
+        "engine_shape_file": "AE-1305_processed.txt",
         "parameter_file": "parameters.json"
     },
     "safety_factors": {
@@ -55,7 +55,7 @@
         "film_flow_ratio": 0.1
     },
     "plot_settings": {
-        "output_directory": "MethaneEngineHeatTransferPlots",
+        "output_directory": "AE-1305_processed_Plots",
         "figure_size": [12, 8],
         "dpi": 300,
         "plot_format": "png",

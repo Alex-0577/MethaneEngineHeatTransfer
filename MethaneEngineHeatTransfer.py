@@ -3693,7 +3693,7 @@ def main():
         logger.info("10. 生成分析图表...")
         
         # 创建绘图生成器
-        plotter = MethaneEnginePlotGenerator()
+        plotter = MethaneEnginePlotGenerator(output_dir=params['plot_settings']['output_directory'])
         
         # 生成各类图表
         plotter.plot_engine_shape(axial_results, engine.geometry)
