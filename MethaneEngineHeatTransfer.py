@@ -151,7 +151,7 @@ def load_parameters(parameter_file='parameters.json'):
 # 初始化日志
 logger = setup_logging()
 # 加载全局参数
-params = load_parameters()
+params = load_parameters(parameter_file='parameters_AE-1310.json')
 
 
 def setup_chinese_font():
@@ -734,8 +734,31 @@ class REFPROPFluid:
                              f"热导率={transport_results.tcx:.4f}W/m·K")
             
             # 组装返回结果
+            # REFPROP 返回的 results.D 在不同接口可能为质量密度(kg/m³)或摩尔浓度(mol/L)
+            # 对常见不一致情况进行检测并修正：
+            raw_D = results.D
+            # 甲烷摩尔质量 (g/mol)
+            MOLWT_METHANE = 16.04
+            # 参考默认估算值
+            default_density = self._get_default_methane_properties(T, P)['density']
+
+            if raw_D is None:
+                density_corrected = default_density
+            else:
+                try:
+                    raw_D_val = float(raw_D)
+                except Exception:
+                    raw_D_val = raw_D
+
+                # 如果 REFPROP 给出的数值明显比经验估算小很多且数值较小，推断其为 mol/L，进行转换
+                if isinstance(raw_D_val, (int, float)) and raw_D_val > 0 and abs(raw_D_val - default_density) > 0.5 * default_density and raw_D_val < default_density:
+                    density_corrected = raw_D_val * MOLWT_METHANE  # mol/L * g/mol -> g/L == kg/m³
+                    logger.debug(f"检测到REFPROP返回值疑为摩尔浓度({raw_D_val}), 已转换为质量密度: {density_corrected:.2f} kg/m³")
+                else:
+                    density_corrected = raw_D_val
+
             result_dict = {
-                'density': results.D,  # kg/m³
+                'density': density_corrected,
                 'viscosity': transport_results.eta * 1e-6,  # μPa·s -> Pa·s
                 'conductivity': transport_results.tcx,  # W/m·K
                 'specific_heat': results.Cp * 1000,  # kJ/kg·K -> J/(kg·K)
@@ -3281,6 +3304,102 @@ class MethaneEnginePlotGenerator:
             'gas_specific_heat_J_per_kgK': specific_heats,
             'gas_prandtl_number': prandtls
         }
+        # 保存燃气物性数据（若需要）
+        try:
+            self.save_data_to_csv(data_dict, filename)
+        except Exception:
+            pass
+
+    def plot_methane_properties(self, axial_results, filename="methane_properties.png"):
+        """
+        绘制甲烷物性随轴向位置变化的图表
+
+        参数:
+        axial_results: list - 轴向分布计算结果（段中应包含甲烷物性或冷却剂物性）
+        filename: str - 输出文件名，默认为"methane_properties.png"
+        """
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
+
+        positions = [seg['axial_position'] for seg in axial_results]
+
+        densities = []
+        viscosities = []
+        conductivities = []
+        specific_heats = []
+        prandtls = []
+        speeds_of_sound = []
+        methane_temps = []
+
+        for seg in axial_results:
+            # 优先使用明确的甲烷物性字段，否则回退到冷却剂物性
+            props = seg.get('methane_properties') or seg.get('coolant_properties') or {}
+            densities.append(props.get('density', np.nan))
+            viscosities.append(props.get('viscosity', np.nan))
+            conductivities.append(props.get('conductivity', np.nan))
+            specific_heats.append(props.get('specific_heat', np.nan))
+            prandtls.append(props.get('prandtl', np.nan))
+            speeds_of_sound.append(props.get('speed_of_sound', np.nan))
+            methane_temps.append(props.get('temperature', np.nan))
+
+        # 密度
+        ax1.semilogy(positions, densities, 'b-', linewidth=2, label='密度 (kg/m³)')
+        ax1.set_xlabel('轴向位置 (m)')
+        ax1.set_ylabel('密度 (kg/m³)')
+        ax1.set_title('甲烷密度分布 (对数坐标)')
+        ax1.grid(True, alpha=0.3)
+        ax1.legend()
+
+        # 粘度
+        ax2.semilogy(positions, viscosities, 'r-', linewidth=2, label='粘度 (Pa·s)')
+        ax2.set_xlabel('轴向位置 (m)')
+        ax2.set_ylabel('粘度 (Pa·s)')
+        ax2.set_title('甲烷粘度分布 (对数坐标)')
+        ax2.grid(True, alpha=0.3)
+        ax2.legend()
+
+        # 热导率，并在右轴显示甲烷温度
+        ax3.plot(positions, conductivities, 'g-', linewidth=2, label='热导率 (W/(m·K))')
+        ax3.set_xlabel('轴向位置 (m)')
+        ax3.set_ylabel('热导率 (W/(m·K))')
+        ax3.set_title('甲烷热导率与温度分布')
+        ax3.grid(True, alpha=0.3)
+        # 右侧y轴用于温度
+        ax3_twin = ax3.twinx()
+        t_line = ax3_twin.plot(positions, methane_temps, 'orange', linestyle='--', linewidth=2, label='温度 (K)')
+        ax3_twin.set_ylabel('温度 (K)', color='orange')
+        # 合并图例
+        lines_left, labels_left = ax3.get_legend_handles_labels()
+        lines_right, labels_right = ax3_twin.get_legend_handles_labels()
+        ax3.legend(lines_left + lines_right, labels_left + labels_right, loc='upper left')
+
+        # 比热与音速（双Y轴）
+        ax4_twin = ax4.twinx()
+        l1 = ax4.plot(positions, specific_heats, 'b-', linewidth=2, label='比热 (J/(kg·K))')
+        l2 = ax4_twin.plot(positions, speeds_of_sound, 'm--', linewidth=2, label='音速 (m/s)')
+        ax4.set_xlabel('轴向位置 (m)')
+        ax4.set_ylabel('比热 (J/(kg·K))', color='b')
+        ax4_twin.set_ylabel('音速 (m/s)', color='m')
+        ax4.set_title('甲烷比热与音速分布')
+        lines = l1 + l2
+        labels = [ln.get_label() for ln in lines]
+        ax4.legend(lines, labels, loc='upper left')
+        ax4.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+        self.save_plot_with_font_fix(filename, dpi=300, bbox_inches='tight')
+        plt.close()
+
+        data_dict = {
+            'axial_position_m': positions,
+            'methane_density_kg_per_m3': densities,
+            'methane_viscosity_Pa_s': viscosities,
+            'methane_conductivity_W_per_mK': conductivities,
+            'methane_specific_heat_J_per_kgK': specific_heats,
+            'methane_prandtl_number': prandtls,
+            'methane_speed_of_sound_m_per_s': speeds_of_sound
+        }
+
+        self.save_data_to_csv(data_dict, filename)
     
     def plot_velocity_analysis_comparison(self, axial_results, filename="velocity_analysis_comparison.png"):
         """
@@ -3721,9 +3840,12 @@ def main():
         # 3. 设置冷却通道几何参数
         logger.info("3. 配置冷却系统几何参数...")
         geo = params['engine_geometry']
+        # 优先使用几何文件提供的总长度（如果存在），否则使用参数文件中的值
+        L_chamber_from_shape = engine.geometry.get('length', {}).get('chamber', None)
+        L_chamber_to_use = L_chamber_from_shape if L_chamber_from_shape is not None else geo['L_chamber']
         engine.set_geometric_parameters(
             d_throat=geo['d_throat'],
-            L_chamber=geo['L_chamber'],
+            L_chamber=L_chamber_to_use,
             delta_wall=geo['delta_wall'],
             number_of_fins=geo['number_of_fins'],
             t_fin=geo['t_fin'],
@@ -3914,6 +4036,7 @@ def main():
         plotter.plot_velocity_analysis_comparison(axial_results)
         plotter.plot_gas_temperature_analysis(axial_results)
         plotter.plot_heat_transfer_parameters(axial_results)
+        plotter.plot_methane_properties(axial_results)
         
         logger.info(f"所有图表已保存至: {plotter.output_dir}")
         

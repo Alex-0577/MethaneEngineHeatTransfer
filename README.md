@@ -121,6 +121,7 @@ project/
   "L_chamber": "燃烧室长度 [m]", 
   "delta_wall": "内壁厚度 [m]",
   "b_channel": "冷却通道宽度 [m]",
+  "number_of_fins": "肋片数量",
   "t_fin": "肋片厚度 [m]",
   "h_fin": "肋片高度 [m]",
   "delta_fin": "通道高度 [m]"
