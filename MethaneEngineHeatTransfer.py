@@ -1516,7 +1516,58 @@ class LOX_MethaneEngineHeatTransfer:
         k_value = k1 + (k2 - k1) * (temperature - T1) / (T2 - T1)
         logger.debug(f"插值计算热导率: k={k_value} W/(m·K)")
         return k_value
+    
+    def calculate_fin_coefficient(self, h_c_with_fins, h_c_without_fins):
+        """
+        计算肋条系数 η = α₁/α₀
+        
+        参数:
+        h_c_with_fins: float - 有肋条时的换热系数 [W/(m²·K)]
+        h_c_without_fins: float - 无肋条时的换热系数 [W/(m²·K)]
+        
+        返回:
+        float: 肋条系数 η
+        """
+        if h_c_without_fins <= 0:
+            logger.warning(f"无肋条换热系数无效: {h_c_without_fins}，返回默认值1.0")
+            return 1.0
+        
+        eta = h_c_with_fins / h_c_without_fins
+        logger.debug(f"肋条系数计算: η = {h_c_with_fins:.1f} / {h_c_without_fins:.1f} = {eta:.3f}")
+        return eta
 
+    def calculate_coolant_htc_without_fins(self, T_c, P_c, T_wc, v_c, d_h):
+        """
+        计算无肋条条件下的冷却剂侧换热系数 α₀
+        
+        参数:
+        T_c: float - 冷却剂温度 [K]
+        P_c: float - 冷却剂压力 [Pa]  
+        T_wc: float - 壁面温度 [K]
+        v_c: float - 流速 [m/s]
+        d_h: float - 水力直径 [m]
+        
+        返回:
+        float: 无肋条换热系数 α₀ [W/(m²·K)]
+        """
+        # 获取冷却剂物性
+        coolant_props = self.fluid_props.get_methane_properties(T_c, P_c)
+        rho = coolant_props['density']
+        lambda_c = coolant_props['conductivity'] 
+        cp_c = coolant_props['specific_heat']
+        mu_c = coolant_props['viscosity']
+        
+        # 使用标准Dittus-Boelter公式计算无肋条换热系数
+        Re = rho * v_c * d_h / mu_c
+        Pr = cp_c * mu_c / lambda_c
+        
+        if Re > 2300:  # 湍流
+            h_c0 = 0.023 * Re**0.8 * Pr**0.4 * lambda_c / d_h
+        else:  # 层流
+            h_c0 = 3.66 * lambda_c / d_h  # 恒壁温圆管层流换热系数
+        
+        logger.debug(f"无肋条换热系数: Re={Re:.0f}, Pr={Pr:.3f}, h_c0={h_c0:.1f} W/(m²·K)")
+        return h_c0
     
     def analyze_combustion_performance(self, Pc_MPa, mixture_ratios, eps_values):
         """
@@ -2249,6 +2300,25 @@ class LOX_MethaneEngineHeatTransfer:
             previous_T_wc = T_wc
 
             logger.debug(f"求解结果: T_wg={T_wg:.2f}K, T_wc={T_wc:.2f}K")
+
+            # 计算并记录换热参数
+            d_h = operating_conditions.get('hydraulic_diameter', 0.01)
+            h_c, coolant_props_hc = self.coolant_side_heat_transfer_coefficient(
+                T_coolant_current, P_coolant_current, T_wc, v_current, d_h
+            )
+
+            # 计算无肋条情况下的冷却剂侧换热系数
+            h_c0 = self.calculate_coolant_htc_without_fins(
+                T_coolant_current, P_coolant_current, T_wc, v_current, d_h
+            )
+
+            # 计算肋条系数 η = α₁/α₀
+            eta_fin = self.calculate_fin_coefficient(h_c, h_c0)
+
+            # 计算肋条修正系数
+            T_avg_wall = (T_wg + T_wc) / 2
+            lambda_wall = self.calculate_thermal_conductivity(T_avg_wall, material_properties)
+            k_R = self.fin_correction_factor(h_c, lambda_wall, b_channel_local, T_avg_wall)
             
             # 计算当地热流密度
             h_g = self.gas_side_heat_transfer_coefficient(
@@ -2339,8 +2409,13 @@ class LOX_MethaneEngineHeatTransfer:
                 'mass_flow_rate': m_dot_coolant,
                 'coolant_properties': coolant_props,
                 'gas_properties': gas_props,
-                'gas_temperature': T_gas_local,  # 新增：存储当地燃气温度
-                'stagnation_temperature': T0,    # 新增：存储滞止温度参考
+                'gas_temperature': T_gas_local,
+                'stagnation_temperature': T0,
+                'fin_correction_factor': k_R,
+                'coolant_side_heat_transfer_coefficient': h_c,
+                'coolant_side_htc_without_fins': h_c0,
+                'fin_coefficient': eta_fin,
+                'coolant_side_htc_with_fins': h_c
             }
             
             axial_results.append(segment_result)
@@ -3350,6 +3425,141 @@ class MethaneEnginePlotGenerator:
 
         self.save_data_to_csv(data_dict, filename)
 
+    def plot_heat_transfer_parameters(self, axial_results, filename="heat_transfer_parameters.png"):
+        """
+        绘制冷却剂与壁面传热参数分布图
+        
+        参数:
+        axial_results: list - 轴向分布计算结果
+        filename: str - 输出文件名
+        
+        返回:
+        None - 生成包含换热系数和壁温的图表
+        """
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+    
+        # 提取数据
+        positions = [seg['axial_position'] for seg in axial_results]
+        
+        # 从轴向结果中提取换热参数
+        h_c_values = [seg.get('coolant_side_htc_with_fins', 0) for seg in axial_results]
+        h_c0_values = [seg.get('coolant_side_htc_without_fins', 0) for seg in axial_results]
+        eta_fin_values = [seg.get('fin_coefficient', 1.0) for seg in axial_results]
+        T_wc_values = [seg['coolant_side_wall_temp'] for seg in axial_results]
+        T_wg_values = [seg['gas_side_wall_temp'] for seg in axial_results]
+        
+        # 1. 换热系数对比图（有肋条 vs 无肋条）
+        ax1.plot(positions, h_c_values, 'b-', linewidth=2, label='有肋条换热系数 α₁')
+        ax1.plot(positions, h_c0_values, 'r--', linewidth=2, label='无肋条换热系数 α₀')
+        ax1.fill_between(positions, h_c0_values, h_c_values, alpha=0.3, color='green', 
+                        label='肋条增强效果')
+        ax1.set_xlabel('轴向位置 (m)')
+        ax1.set_ylabel('换热系数 [W/(m²·K)]')
+        ax1.set_title('肋条对换热系数的影响对比')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+        
+        # 计算平均增强效果
+        avg_enhancement = np.mean([h_c/h_c0 if h_c0 > 0 else 1.0 
+                                for h_c, h_c0 in zip(h_c_values, h_c0_values)])
+        ax1.text(0.02, 0.98, f'平均增强倍数: {avg_enhancement:.2f}x', 
+                transform=ax1.transAxes, fontsize=10, verticalalignment='top',
+                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        
+        # 2. 肋条系数 η 分布
+        ax2.plot(positions, eta_fin_values, 'purple', linewidth=3, label='肋条系数 η = α₁/α₀')
+        ax2.axhline(y=1.0, color='red', linestyle='--', alpha=0.7, label='无增强基准线')
+        ax2.set_xlabel('轴向位置 (m)')
+        ax2.set_ylabel('肋条系数 η')
+        ax2.set_title('肋条系数轴向分布 (η = α₁/α₀)')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        
+        # 标记最大增强位置
+        max_eta_idx = np.argmax(eta_fin_values)
+        max_eta = eta_fin_values[max_eta_idx]
+        max_pos = positions[max_eta_idx]
+        ax2.annotate(f'最大增强: η={max_eta:.2f}', 
+                    xy=(max_pos, max_eta), xytext=(10, 10), 
+                    textcoords='offset points',
+                    bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.7),
+                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0'))
+        
+        # 3. 壁面温度分布
+        ax3.plot(positions, T_wg_values, 'r-', linewidth=2, label='燃气侧壁温')
+        ax3.plot(positions, T_wc_values, 'b-', linewidth=2, label='冷却剂侧壁温')
+        ax3.set_xlabel('轴向位置 (m)')
+        ax3.set_ylabel('温度 (K)')
+        ax3.set_title('壁面温度轴向分布')
+        ax3.legend()
+        ax3.grid(True, alpha=0.3)
+        
+        # 标记最高温度位置
+        max_temp_idx = np.argmax(T_wg_values)
+        max_temp = T_wg_values[max_temp_idx]
+        max_temp_pos = positions[max_temp_idx]
+        ax3.annotate(f'最高壁温: {max_temp:.0f}K', 
+                    xy=(max_temp_pos, max_temp), xytext=(10, 10),
+                    textcoords='offset points',
+                    bbox=dict(boxstyle='round', facecolor='orange', alpha=0.7),
+                    arrowprops=dict(arrowstyle='->'))
+        
+        # 4. 分离：ax3 仅显示冷却剂侧壁温，ax4 显示燃气侧壁温
+        # ax3: 冷却剂侧壁温分布
+        ax3.clear()
+        ax3.plot(positions, T_wc_values, 'b-', linewidth=2, label='冷却剂侧壁温')
+        ax3.set_xlabel('轴向位置 (m)')
+        ax3.set_ylabel('温度 (K)')
+        ax3.set_title('冷却剂侧壁温轴向分布')
+        ax3.legend()
+        ax3.grid(True, alpha=0.3)
+
+        # 标记冷却剂侧最高温度位置
+        max_cool_idx = np.argmax(T_wc_values)
+        max_cool_temp = T_wc_values[max_cool_idx]
+        max_cool_pos = positions[max_cool_idx]
+        ax3.annotate(f'最高冷却剂侧温: {max_cool_temp:.0f}K',
+                    xy=(max_cool_pos, max_cool_temp), xytext=(10, 10),
+                    textcoords='offset points',
+                    bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7),
+                    arrowprops=dict(arrowstyle='->'))
+
+        # ax4: 燃气侧壁温分布
+        ax4.clear()
+        ax4.plot(positions, T_wg_values, 'r-', linewidth=2, label='燃气侧壁温')
+        ax4.set_xlabel('轴向位置 (m)')
+        ax4.set_ylabel('温度 (K)')
+        ax4.set_title('燃气侧壁温轴向分布')
+        ax4.legend()
+        ax4.grid(True, alpha=0.3)
+
+        # 标记燃气侧最高温度位置
+        max_gas_idx = np.argmax(T_wg_values)
+        max_gas_temp = T_wg_values[max_gas_idx]
+        max_gas_pos = positions[max_gas_idx]
+        ax4.annotate(f'最高燃气侧温: {max_gas_temp:.0f}K',
+                    xy=(max_gas_pos, max_gas_temp), xytext=(10, 10),
+                    textcoords='offset points',
+                    bbox=dict(boxstyle='round', facecolor='orange', alpha=0.7),
+                    arrowprops=dict(arrowstyle='->'))
+        
+        plt.tight_layout()
+        self.save_plot_with_font_fix(filename, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        # 保存CSV数据
+        data_dict = {
+            'axial_position_m': positions,
+            'coolant_side_htc_with_fins_W_per_m2K': h_c_values,      # α₁
+            'coolant_side_htc_without_fins_W_per_m2K': h_c0_values,  # α₀  
+            'fin_coefficient_eta': eta_fin_values,                   # η = α₁/α₀
+            'coolant_side_wall_temp_K': T_wc_values,
+            'gas_side_wall_temp_K': T_wg_values,
+            'enhancement_factor': [h_c/h_c0 if h_c0 > 0 else 1.0 
+                                for h_c, h_c0 in zip(h_c_values, h_c0_values)]
+        }
+        self.save_data_to_csv(data_dict, filename)
+
 
 def validate_geometry_calculation(self):
     """
@@ -3703,6 +3913,7 @@ def main():
         plotter.plot_gas_properties(axial_results)
         plotter.plot_velocity_analysis_comparison(axial_results)
         plotter.plot_gas_temperature_analysis(axial_results)
+        plotter.plot_heat_transfer_parameters(axial_results)
         
         logger.info(f"所有图表已保存至: {plotter.output_dir}")
         
