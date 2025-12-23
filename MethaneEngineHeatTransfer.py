@@ -16,7 +16,7 @@ import numpy as np
 from scipy.optimize import fsolve
 import os
 import logging
-from ctREFPROP.ctREFPROP import REFPROPFunctionLibrary
+from CoolProp.CoolProp import PropsSI
 from scipy.optimize import fsolve
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -112,7 +112,9 @@ def load_parameters(parameter_file='parameters.json'):
         },
         "calculation_settings": {
             "num_segments": 60,
-            "max_allowable_temp": 1100.0
+            "max_allowable_temp": 1100.0,
+            "wall_relax_alpha": 0.4,
+            "max_delta_T_segment": 50.0
         },
         "file_paths": {
             "refprop_path": r"C:\Program Files (x86)\REFPROP",
@@ -657,31 +659,14 @@ class REFPROPFluid:
         - 验证库文件完整性
         - 设置工作流体和参数
         """
+        # 将REFPROP接口替换为CoolProp，检测CoolProp是否可用
         try:
-            # 如果未指定路径，尝试常见安装位置
-            if refprop_path is None:
-                possible_paths = [
-                    r"C:\Program Files\REFPROP",
-                    r"C:\Program Files (x86)\REFPROP",
-                    r"/usr/local/REFPROP"  # Linux路径
-                ]
-                for path in possible_paths:
-                    if os.path.exists(path):
-                        refprop_path = path
-                        break
-            
-            if refprop_path and os.path.exists(refprop_path):
-                # 使用pyrefprop库
-                self.RP = REFPROPFunctionLibrary(refprop_path)
-                self.RP.SETPATHdll(refprop_path)
-                logger.info(f"REFPROP加载成功: {refprop_path}")
-                logger.info(f"REFPROP版本: {self.RP.RPVersion()}")
-            else:
-                logger.warning("未找到REFPROP库，将使用默认物性值")
-                self.RP = None
-                
+            # 通过PropsSI直接使用CoolProp，无需外部路径
+            # 标记为已启用CoolProp
+            self.RP = 'CoolProp'
+            logger.info("CoolProp 可用，已启用 CoolProp 物性计算")
         except Exception as e:
-            logger.error(f"REFPROP加载失败: {e}，将使用默认物性值")
+            logger.warning(f"CoolProp 初始化失败: {e}，将使用默认物性值")
             self.RP = None
     
     def get_methane_properties(self, T, P):
@@ -700,88 +685,72 @@ class REFPROPFluid:
         if P < 1000 or P > 100e6:
             logger.warning(f"甲烷物性计算: 压力{P/1e6:.2f}MPa超出常规范围(0.001-100MPa)，但仍继续计算")
 
+        # 如果CoolProp不可用，回退到默认物性
         if self.RP is None:
-            logger.debug(f"REFPROP不可用，使用默认甲烷物性计算: T={T}K, P={P/1e6:.2f}MPa")
+            logger.debug(f"CoolProp不可用，使用默认甲烷物性计算: T={T}K, P={P/1e6:.2f}MPa")
             return self._get_default_methane_properties(T, P)
-        
+
         try:
-            # 设置甲烷为当前工作流体
-            methane = "METHANE"
-            logger.debug(f"设置REFPROP工作流体: {methane}")
-            self.RP.SETUPdll(1, methane, "HMX.BNC", "DEF")
-            
-            # 转换压力单位: Pa -> kPa (REFPROP标准单位)
-            P_kpa = P / 1000.0
-            
-            # 摩尔分数 (纯物质)
-            z = [1.0]
-            
-            # 执行温度-压力闪蒸计算
-            results = self.RP.TPFLSHdll(T, P_kpa, z)
-            
-            if results.ierr != 0:
-                logger.warning(f"TPFLSH计算警告，代码: {results.ierr}, 信息: {results.herr}")
-            else:
-                logger.debug(f"TPFLSH计算成功: 密度={results.D:.2f}kg/m³, 温度={T}K")
-            
-            # 计算输运性质
-            transport_results = self.RP.TRNPRPdll(T, results.D, z)
-            
-            if transport_results.ierr != 0:
-                logger.warning(f"TRNPRP计算警告，代码: {transport_results.ierr}, 信息: {transport_results.herr}")
-            else:
-                logger.debug(f"TRNPRP计算成功: 粘度={transport_results.eta*1e-6:.6f}Pa·s, "
-                             f"热导率={transport_results.tcx:.4f}W/m·K")
-            
-            # 组装返回结果
-            # REFPROP 返回的 results.D 在不同接口可能为质量密度(kg/m³)或摩尔浓度(mol/L)
-            # 对常见不一致情况进行检测并修正：
-            raw_D = results.D
-            # 甲烷摩尔质量 (g/mol)
-            MOLWT_METHANE = 16.04
-            # 参考默认估算值
-            default_density = self._get_default_methane_properties(T, P)['density']
+            fluid = 'Methane'
+            # CoolProp 接受压力为 Pa，温度为 K
+            density = PropsSI('D', 'T', T, 'P', P, fluid)
+            # 动力粘度 (Pa·s)
+            try:
+                viscosity = PropsSI('VISCOSITY', 'T', T, 'P', P, fluid)
+            except Exception:
+                viscosity = None
+            # 导热率 W/m/K
+            try:
+                conductivity = PropsSI('CONDUCTIVITY', 'T', T, 'P', P, fluid)
+            except Exception:
+                conductivity = None
+            # 比热 J/kg/K
+            try:
+                cp_mass = PropsSI('Cpmass', 'T', T, 'P', P, fluid)
+            except Exception:
+                cp_mass = None
+            # 音速 m/s
+            try:
+                speed_of_sound = PropsSI('A', 'T', T, 'P', P, fluid)
+            except Exception:
+                speed_of_sound = None
+            # 焓和熵 (CoolProp 返回为 J/kg 和 J/kg/K) -> 转换为 kJ/kg 和 kJ/kg/K 以兼容原接口
+            try:
+                enthalpy = PropsSI('Hmass', 'T', T, 'P', P, fluid) / 1000.0
+            except Exception:
+                enthalpy = None
+            try:
+                entropy = PropsSI('Smass', 'T', T, 'P', P, fluid) / 1000.0
+            except Exception:
+                entropy = None
 
-            if raw_D is None:
-                density_corrected = default_density
-            else:
+            viscosity_pa_s = viscosity if viscosity is None else float(viscosity)
+
+            prandtl_val = None
+            if cp_mass is not None and conductivity and conductivity != 0:
                 try:
-                    raw_D_val = float(raw_D)
+                    prandtl_val = viscosity_pa_s * float(cp_mass) / float(conductivity)
                 except Exception:
-                    raw_D_val = raw_D
-
-                # 如果 REFPROP 给出的数值明显比经验估算小很多且数值较小，推断其为 mol/L，进行转换
-                if isinstance(raw_D_val, (int, float)) and raw_D_val > 0 and abs(raw_D_val - default_density) > 0.5 * default_density and raw_D_val < default_density:
-                    density_corrected = raw_D_val * MOLWT_METHANE  # mol/L * g/mol -> g/L == kg/m³
-                    logger.debug(f"检测到REFPROP返回值疑为摩尔浓度({raw_D_val}), 已转换为质量密度: {density_corrected:.2f} kg/m³")
-                else:
-                    density_corrected = raw_D_val
+                    prandtl_val = None
 
             result_dict = {
-                'density': density_corrected,
-                'viscosity': transport_results.eta * 1e-6,  # μPa·s -> Pa·s
-                'conductivity': transport_results.tcx,  # W/m·K
-                'specific_heat': results.Cp * 1000,  # kJ/kg·K -> J/(kg·K)
-                'prandtl': (transport_results.eta * 1e-6 * results.Cp * 1000) / transport_results.tcx,
+                'density': density,
+                'viscosity': viscosity_pa_s,
+                'conductivity': conductivity,
+                'specific_heat': cp_mass,
+                'prandtl': prandtl_val,
                 'temperature': T,
                 'pressure': P,
-                'speed_of_sound': results.w,  # m/s
-                'enthalpy': results.h,  # kJ/kg
-                'entropy': results.s  # kJ/kg·K
+                'speed_of_sound': speed_of_sound,
+                'enthalpy': enthalpy,
+                'entropy': entropy
             }
 
-            logger.debug(f"甲烷物性计算结果汇总:")
-            logger.debug(f"- 密度: {result_dict['density']:.2f} kg/m³")
-            logger.debug(f"- 粘度: {result_dict['viscosity']:.2e} Pa·s")
-            logger.debug(f"- 热导率: {result_dict['conductivity']:.3f} W/(m·K)")
-            logger.debug(f"- 比热: {result_dict['specific_heat']:.0f} J/(kg·K)")
-            logger.debug(f"- 普朗特数: {result_dict['prandtl']:.3f}")
-
+            logger.debug(f"甲烷物性计算结果 (CoolProp): 密度={density:.2f} kg/m³, 粘度={viscosity_pa_s:.2e} Pa·s, 比热={cp_mass:.1f} J/(kg·K)")
             return result_dict
 
-            
         except Exception as e:
-            logger.error(f"REFPROP甲烷物性计算失败: {e}，使用默认值")
+            logger.error(f"CoolProp 甲烷物性计算失败: {e}，使用默认值")
             logger.debug(f"异常详情: {str(e)}")
             return self._get_default_methane_properties(T, P)
     
@@ -2106,8 +2075,19 @@ class LOX_MethaneEngineHeatTransfer:
             if T_wg_sol < 1.0 or T_wc_sol < 1.0:
                 logger.warning(f"热平衡求解得到非物理温度: T_wg={T_wg_sol}, T_wc={T_wc_sol}. 返回初值。")
                 return initial_guess_array[0], initial_guess_array[1]
-            logger.debug(f"热平衡求解成功: T_wg={T_wg_sol:.2f}K, T_wc={T_wc_sol:.2f}K")
-            return T_wg_sol, T_wc_sol
+            # 应用松弛以提高迭代稳定性（使用参数文件中的 wall_relax_alpha）
+            try:
+                alpha = float(params.get('calculation_settings', {}).get('wall_relax_alpha', 0.4))
+            except Exception:
+                alpha = 0.4
+
+            # 使用初值作为上次值（若提供）用于松弛
+            T_wg_prev, T_wc_prev = initial_guess_array[0], initial_guess_array[1]
+            T_wg_relaxed = T_wg_prev + alpha * (T_wg_sol - T_wg_prev)
+            T_wc_relaxed = T_wc_prev + alpha * (T_wc_sol - T_wc_prev)
+
+            logger.debug(f"热平衡求解成功: raw(T_wg={T_wg_sol:.2f}, T_wc={T_wc_sol:.2f}), relaxed(alpha={alpha}) -> (T_wg={T_wg_relaxed:.2f}, T_wc={T_wc_relaxed:.2f})")
+            return T_wg_relaxed, T_wc_relaxed
         except Exception as e:
             logger.error(f"热平衡求解失败: {e}")
             # 返回保守估计值
@@ -2158,6 +2138,53 @@ class LOX_MethaneEngineHeatTransfer:
         logger.debug(f"- 精度提升: 使用平均温度计算，比热变化{abs(cp_avg-cp_initial)/cp_initial*100:.1f}%")
         
         return delta_T
+
+    def compute_coolant_profile(self, m_dot_coolant, T_in, P_in, q_axial, dx_axial, cp_func=None, max_deltaT=None):
+        """
+        一维积分计算冷却剂轴向温度分布。
+
+        输入:
+        - m_dot_coolant: 质量流量 [kg/s]
+        - T_in: 入口温度 [K]
+        - P_in: 入口压力 [Pa]
+        - q_axial: 每段的热流密度列表或数组 [W/m2]
+        - dx_axial: 每段对应的面积或长度（用于计算段热量），可以是段长度数组或单值
+        - cp_func: 可选函数 cp_func(T,P) -> cp (J/kgK)。若为None，将使用self.fluid_props.get_methane_properties
+        - max_deltaT: 单段最大允许温升（K），超过将被截断并记录警告
+
+        返回:
+        - T_profile: list of temperatures at segment boundaries (长度 = len(q_axial)+1)
+        """
+        T = float(T_in)
+        T_profile = [T]
+        if np.isscalar(dx_axial):
+            dx_arr = [dx_axial] * len(q_axial)
+        else:
+            dx_arr = list(dx_axial)
+
+        for i, q_flux in enumerate(q_axial):
+            dx = dx_arr[i]
+            # 段吸收的功率（W）: q_flux (W/m2) * 面积(m2) 或直接传入段功率
+            q_segment = q_flux * dx
+            if cp_func is None:
+                props = self.fluid_props.get_methane_properties(T, P_in)
+                cp = props.get('specific_heat', None)
+            else:
+                cp = cp_func(T, P_in)
+
+            if cp is None or cp <= 0:
+                logger.warning(f'compute_coolant_profile: 无效比热 cp={cp} at T={T}, using fallback 1000 J/kgK')
+                cp = 1000.0
+
+            dT = q_segment / (m_dot_coolant * cp)
+            if max_deltaT is not None and dT > max_deltaT:
+                logger.warning(f'单段温升过大 (dT={dT:.1f}K) 超过限制 {max_deltaT}K，已截断')
+                dT = max_deltaT
+
+            T = T + dT
+            T_profile.append(T)
+
+        return T_profile
 
     def calculate_axial_distribution(self, T_gas, P_chamber, c_star, m_dot_coolant, T_coolant_in, P_coolant_in, material_properties, operating_conditions, num_segments, mixture_ratio=3.5, film_cooling_params=None):
         """
@@ -2353,13 +2380,22 @@ class LOX_MethaneEngineHeatTransfer:
             T_aw = T_gas_local * (1 + (k_g - 1) / 2 * Ma_local**2)
             q_heat_flux = h_g * (T_aw - T_wg)
             
-            # 计算冷却剂温升
+            # 计算冷却剂温升（显式一维积分每段法）
             # 假设每个段的热流为当地热流密度乘以当地面积
             q_segment = q_heat_flux * A_local
-            delta_T_segment = self.calculate_coolant_temperature_rise(
-                m_dot_coolant, T_coolant_current, P_coolant_current,
-                q_segment, A_local
-            )
+            # 使用当前冷却剂温度计算比热并直接积分：dT = q_segment / (m_dot * cp)
+            coolant_props_now = self.fluid_props.get_methane_properties(T_coolant_current, P_coolant_current)
+            cp_now = coolant_props_now.get('specific_heat', None)
+            if cp_now is None or cp_now <= 0:
+                logger.warning(f'无效比热 cp={cp_now}，使用备用值1000 J/kgK')
+                cp_now = 1000.0
+
+            # 直接计算段温升并限制单段最大ΔT以保证数值稳定
+            delta_T_segment = q_segment / (m_dot_coolant * cp_now)
+            max_dT = params.get('calculation_settings', {}).get('max_delta_T_segment', 50.0)
+            if delta_T_segment > max_dT:
+                logger.warning(f'位置 {x_position:.6f}m: 计算到的单段温升 {delta_T_segment:.2f}K 超过限制 {max_dT}K，已截断')
+                delta_T_segment = max_dT
             
             # 计算压降
             # 获取冷却剂物性用于压降计算
