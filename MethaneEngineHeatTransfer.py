@@ -683,6 +683,35 @@ class REFPROPFluid:
         except Exception as e:
             logger.error(f"REFPROP加载失败: {e}，将使用默认物性值")
             self.RP = None
+
+    def _record_refprop_warning(self, warning_type, info):
+        """
+        将 REFPROP 相关的警告/错误写入单独的 CSV 文件，便于后续分析。
+
+        warning_type: str - 'TPFLSH'|'TRNPRP'|'REFPROP_EXCEPTION' 等
+        info: dict - 包含要记录的键值（例如 T, P, ierr, herr, raw_D, raw_Cp, tried, message）
+        """
+        try:
+            import csv, pathlib, datetime
+            out_path = pathlib.Path(os.getcwd()) / "refprop_warnings.csv"
+            header = [
+                'timestamp', 'warning_type', 'T_K', 'P_Pa', 'P_kPa', 'ierr', 'herr',
+                'raw_D', 'raw_Cp', 'tried_candidates', 'message'
+            ]
+            write_header = not out_path.exists()
+            with out_path.open('a', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=header)
+                if write_header:
+                    writer.writeheader()
+                row = {k: info.get(k, '') for k in header}
+                row['timestamp'] = datetime.datetime.utcnow().isoformat()
+                row['warning_type'] = warning_type
+                # ensure tried_candidates is string
+                if isinstance(row.get('tried_candidates'), (list, tuple)):
+                    row['tried_candidates'] = repr(row['tried_candidates'])
+                writer.writerow(row)
+        except Exception as e:
+            logger.debug(f"记录 REFPROP 警告到文件失败: {e}")
     
     def get_methane_properties(self, T, P):
         """
@@ -709,29 +738,105 @@ class REFPROPFluid:
             methane = "METHANE"
             logger.debug(f"设置REFPROP工作流体: {methane}")
             self.RP.SETUPdll(1, methane, "HMX.BNC", "DEF")
-            
-            # 转换压力单位: Pa -> kPa (REFPROP标准单位)
+
+            # 转换压力单位: Pa -> kPa (REFPROP2dll 使用 kPa)
             P_kpa = P / 1000.0
-            
+
             # 摩尔分数 (纯物质)
             z = [1.0]
-            
-            # 执行温度-压力闪蒸计算
-            results = self.RP.TPFLSHdll(T, P_kpa, z)
-            
-            if results.ierr != 0:
-                logger.warning(f"TPFLSH计算警告，代码: {results.ierr}, 信息: {results.herr}")
+
+            # 优先使用更直接的 TP 接口避免闪蒸求解在临界/超临界附近产生大量警告
+            try:
+                props_str = 'D;H;S;CP;VIS;TCX;W'
+                res = self.RP.REFPROP2dll(methane, 'TP', props_str, 0, 0, T, P_kpa, z)
+            except Exception as e_res:
+                res = None
+                logger.debug(f"调用 REFPROP2dll(TP) 异常: {e_res}")
+
+            if res is None or getattr(res, 'ierr', 0) != 0:
+                # 记录并回退到 TPFLSH 作为最后手段（兼容旧逻辑）
+                msg = f"REFPROP2dll(TP) 计算警告/错误: ierr={getattr(res,'ierr',None)}, herr={getattr(res,'herr',None)}"
+                logger.warning(msg)
+                try:
+                    self._record_refprop_warning('REFPROP2_TP', {
+                        'T_K': T,
+                        'P_Pa': P,
+                        'P_kPa': P_kpa,
+                        'ierr': getattr(res, 'ierr', ''),
+                        'herr': getattr(res, 'herr', ''),
+                        'raw_D': getattr(res, 'Output', [''])[0] if res is not None else '',
+                        'raw_Cp': getattr(res, 'Output', ['','', '',''])[3] if res is not None else '',
+                        'message': msg
+                    })
+                except Exception:
+                    pass
+
+                # 退回到旧的闪蒸/输运路径以保证不终止整个计算
+                results = self.RP.TPFLSHdll(T, P_kpa, z)
+                if getattr(results, 'ierr', 0) != 0:
+                    logger.warning(f"TPFLSH计算仍然产生警告: ierr={getattr(results,'ierr',None)}, herr={getattr(results,'herr',None)}")
+                # 尝试使用 TRNPRP 获取输运性质（保留旧逻辑的重试机制）
+                transport_results = None
+                try:
+                    transport_results = self.RP.TRNPRPdll(T, results.D, z)
+                except Exception as e_tr:
+                    logger.debug(f"TRNPRP 调用异常: {e_tr}")
+
+                # 将 results 用作后续字段访问（兼容旧返回接口）
             else:
-                logger.debug(f"TPFLSH计算成功: 密度={results.D:.2f}kg/m³, 温度={T}K")
-            
-            # 计算输运性质
-            transport_results = self.RP.TRNPRPdll(T, results.D, z)
-            
-            if transport_results.ierr != 0:
-                logger.warning(f"TRNPRP计算警告，代码: {transport_results.ierr}, 信息: {transport_results.herr}")
-            else:
-                logger.debug(f"TRNPRP计算成功: 粘度={transport_results.eta*1e-6:.6f}Pa·s, "
-                             f"热导率={transport_results.tcx:.4f}W/m·K")
+                # 从 REFPROP2dll 输出解析物性，避免 TRNPRP 导致的超限警告
+                out = list(res.Output) if hasattr(res, 'Output') else []
+                # 期望顺序: D, H, S, CP, VIS, TCX, W
+                raw_D = out[0] if len(out) > 0 else None
+                enthalpy = out[1] if len(out) > 1 else None
+                entropy = out[2] if len(out) > 2 else None
+                raw_Cp = out[3] if len(out) > 3 else None
+                viscosity_raw = out[4] if len(out) > 4 else None
+                tcx = out[5] if len(out) > 5 else None
+                w = out[6] if len(out) > 6 else None
+
+                # 单位转换
+                try:
+                    viscosity_pa_s = float(viscosity_raw) * 1e-6 if viscosity_raw is not None else None
+                except Exception:
+                    viscosity_pa_s = None
+                try:
+                    cp_j_per_kgk = float(raw_Cp) * 1000.0 if raw_Cp is not None else None
+                except Exception:
+                    cp_j_per_kgk = None
+
+                # 处理密度的可能单位歧义（仍保留检测与转换）
+                raw_D_val = None
+                try:
+                    raw_D_val = float(raw_D)
+                except Exception:
+                    raw_D_val = raw_D
+
+                MOLWT_METHANE = 16.04
+                default_density = self._get_default_methane_properties(T, P)['density']
+                if raw_D_val is None:
+                    density_corrected = default_density
+                else:
+                    if isinstance(raw_D_val, (int, float)) and raw_D_val > 0 and abs(raw_D_val - default_density) > 0.5 * default_density and raw_D_val < default_density:
+                        density_corrected = raw_D_val * MOLWT_METHANE
+                        logger.debug(f"检测到REFPROP2dll返回值疑为摩尔浓度({raw_D_val}), 已转换为质量密度: {density_corrected:.2f} kg/m³")
+                    else:
+                        density_corrected = raw_D_val
+
+                # 组装一个兼容旧接口的伪 results/transport 以便后面逻辑复用
+                class _Pseudo:
+                    pass
+                results = _Pseudo()
+                setattr(results, 'D', density_corrected)
+                setattr(results, 'h', enthalpy)
+                setattr(results, 's', entropy)
+                # 保留 raw_Cp 原始数值，让后续的单位候选逻辑来判定正确单位（不要在此处盲目乘1000）
+                setattr(results, 'Cp', raw_Cp)
+                setattr(results, 'w', w)
+
+                transport_results = _Pseudo()
+                setattr(transport_results, 'eta', viscosity_pa_s / 1e-6 if viscosity_pa_s is not None else None)  # 保持后续代码中乘以1e-6的习惯
+                setattr(transport_results, 'tcx', tcx)
             
             # 组装返回结果
             # REFPROP 返回的 results.D 在不同接口可能为质量密度(kg/m³)或摩尔浓度(mol/L)
@@ -757,12 +862,49 @@ class REFPROPFluid:
                 else:
                     density_corrected = raw_D_val
 
+            # 处理 Cp 的单位不确定性：尝试三种假设并选择最接近经验估算值的结果
+            raw_Cp = results.Cp
+            default_cp = self._get_default_methane_properties(T, P)['specific_heat']
+            chosen_cp = None
+            chosen_prandtl = None
+            try:
+                # REFPROP 默认返回摩尔比热（J/mol·K），将其转换为质量比热 J/kg·K
+                Cp_val = float(raw_Cp)
+                MOLWT = 16.04  # g/mol
+                # J/molK -> J/kgK: multiply by 1000 / M (g/mol)
+                chosen_cp = Cp_val * 1000.0 / MOLWT
+                logger.debug(f"将REFPROP返回的摩尔比热转换为质量比热: raw={Cp_val} J/molK -> {chosen_cp:.2f} J/kgK")
+                # 计算普朗特数（如有 transport_results）
+                try:
+                    viscosity_pa_s = transport_results.eta * 1e-6
+                    chosen_prandtl = (viscosity_pa_s * chosen_cp) / transport_results.tcx
+                except Exception:
+                    chosen_prandtl = None
+            except Exception:
+                # 无法解析 raw_Cp，回退到默认
+                chosen_cp = default_cp
+                try:
+                    chosen_prandtl = (transport_results.eta * 1e-6 * chosen_cp) / transport_results.tcx
+                except Exception:
+                    chosen_prandtl = None
+
+            # 不使用低温经验回退：优先信任 REFPROP 返回的比热及其单位转换结果。
+            # 若解析失败则已在上文回退到 default_cp，此处仅记录异常但不覆盖为经验公式。
+            if (chosen_cp is None) or (isinstance(chosen_cp, (int, float)) and chosen_cp <= 0):
+                logger.warning(f"解析到异常比热值 Cp={chosen_cp}，保留默认值 Cp={default_cp:.1f} J/kgK")
+                chosen_cp = default_cp
+                try:
+                    viscosity_pa_s = transport_results.eta * 1e-6
+                    chosen_prandtl = (viscosity_pa_s * chosen_cp) / transport_results.tcx
+                except Exception:
+                    chosen_prandtl = None
+
             result_dict = {
                 'density': density_corrected,
                 'viscosity': transport_results.eta * 1e-6,  # μPa·s -> Pa·s
                 'conductivity': transport_results.tcx,  # W/m·K
-                'specific_heat': results.Cp * 1000,  # kJ/kg·K -> J/(kg·K)
-                'prandtl': (transport_results.eta * 1e-6 * results.Cp * 1000) / transport_results.tcx,
+                'specific_heat': chosen_cp,
+                'prandtl': chosen_prandtl,
                 'temperature': T,
                 'pressure': P,
                 'speed_of_sound': results.w,  # m/s
@@ -783,6 +925,19 @@ class REFPROPFluid:
         except Exception as e:
             logger.error(f"REFPROP甲烷物性计算失败: {e}，使用默认值")
             logger.debug(f"异常详情: {str(e)}")
+            try:
+                self._record_refprop_warning('REFPROP_EXCEPTION', {
+                    'T_K': T,
+                    'P_Pa': P,
+                    'P_kPa': P / 1000.0,
+                    'ierr': '',
+                    'herr': str(e),
+                    'raw_D': '',
+                    'raw_Cp': '',
+                    'message': 'Exception in get_methane_properties'
+                })
+            except Exception:
+                pass
             return self._get_default_methane_properties(T, P)
     
     def _get_default_methane_properties(self, T, P):
@@ -847,6 +1002,21 @@ class REFPROPFluid:
 
         REFPROP_T_MAX = 2000.0  # [K]
         logger.debug(f"开始计算燃烧产物物性: T={T}K, P={P/1e6:.2f}MPa, O/F={mixture_ratio}")
+
+        # 防护措施: 某些混合物在 REFPROP 中的有效温度上限低于库总体上限。
+        # 为减少 TPFLSH/TRNPRP 的大量 out-of-range 警告，对于较高温度区间优先使用 CEA 增强模型。
+        REFPROP_SAFE_T_LIMIT = 800.0  # [K]，阈值可调
+        if T > REFPROP_SAFE_T_LIMIT:
+            logger.warning(f"燃气温度T={T}K超过REFPROP混合物安全阈值{REFPROP_SAFE_T_LIMIT}K，使用CEA增强模型以避免REFPROP超出范围警告")
+            if self.cea_calculator is not None:
+                cea_props = self.cea_calculator.get_combustion_properties(Pc_MPa, mixture_ratio, eps)
+                T_ref = cea_props['temperature']
+                gamma = cea_props['gamma']
+                MolWt = cea_props['molecular_weight']
+                return self._calculate_gas_properties_from_cea(T, P, T_ref, gamma, MolWt, mixture_ratio)
+            else:
+                logger.warning("CEA计算器不可用，回退到简化模型")
+                return self._get_default_combustion_gas_properties(T, P, mixture_ratio)
         
         if T < 0:
             logger.error(f"输入温度{T}K无效，使用默认值")
