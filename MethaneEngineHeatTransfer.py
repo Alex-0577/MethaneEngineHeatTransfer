@@ -746,8 +746,65 @@ class REFPROPFluid:
             z = [1.0]
 
             # 优先使用更直接的 TP 接口避免闪蒸求解在临界/超临界附近产生大量警告
+            # 对输运性质设置安全温度阈值：若温度超出该阈值则不请求输运性质，转而使用上一次有效值或默认值
+            TRANSPORT_SAFE_T = 600.0  # 来自 REFPROP 警告信息 (可按需调整)
+            request_transport = (T <= TRANSPORT_SAFE_T)
+
+            # REFPROP 对甲烷的有效温度上限（经观察与警告信息一致）
+            REFPROP_T_MAX = 625.0
+            # 如果温度超出 REFPROP 推荐的上限，不再调用 REFPROP 的 TP/TPFLSH/TRNPRP，
+            # 而是使用最近一次成功的热力学物性作为回退，以避免触发大量 out-of-range 警告。
+            if T > REFPROP_T_MAX:
+                # 仅记录一次跳过 REFPROP 的告警（去重）
+                if not hasattr(self, '_reported_refprop_messages'):
+                    self._reported_refprop_messages = set()
+                key_skip = ('REFPROP_SKIPPED_T_OVER_MAX',)
+                if key_skip not in self._reported_refprop_messages:
+                    self._reported_refprop_messages.add(key_skip)
+                    try:
+                        self._record_refprop_warning('REFPROP_SKIPPED', {
+                            'T_K': T,
+                            'P_Pa': P,
+                            'P_kPa': P / 1000.0,
+                            'ierr': '',
+                            'herr': f'Temperature {T}K above REFPROP Tmax {REFPROP_T_MAX}K - skipping TP/TPFLSH calls',
+                            'raw_D': '',
+                            'raw_Cp': '',
+                            'message': 'Skip REFPROP calls due to T>REFPROP_T_MAX'
+                        })
+                    except Exception:
+                        pass
+
+                last = getattr(self, '_last_thermo', None)
+                if last is not None:
+                    # 返回最近一次有效热力学解，但更新温压字段以反映当前查询条件
+                    ret = dict(last)
+                    ret['temperature'] = T
+                    ret['pressure'] = P
+                    logger.warning(f"T={T}K 超出 REFPROP 上限 {REFPROP_T_MAX}K，使用最近一次有效热力学物性回退")
+                    return ret
+                else:
+                    # 没有历史有效值可用则回退到默认经验值并记录一次警告
+                    logger.warning(f"T={T}K 超出 REFPROP 上限 {REFPROP_T_MAX}K，且无历史热力学值，使用默认经验回退")
+                    try:
+                        self._record_refprop_warning('REFPROP_SKIPPED_NO_HISTORY', {
+                            'T_K': T,
+                            'P_Pa': P,
+                            'P_kPa': P / 1000.0,
+                            'ierr': '',
+                            'herr': 'No last_thermo available - returning default properties',
+                            'raw_D': '',
+                            'raw_Cp': '',
+                            'message': 'Skip REFPROP and use defaults'
+                        })
+                    except Exception:
+                        pass
+                    return self._get_default_methane_properties(T, P)
             try:
-                props_str = 'D;H;S;CP;VIS;TCX;W'
+                if request_transport:
+                    props_str = 'D;H;S;CP;VIS;TCX;W'
+                else:
+                    props_str = 'D;H;S;CP'  # 仅请求热力学量，避免触发 TRNPRP/输运超限警告
                 res = self.RP.REFPROP2dll(methane, 'TP', props_str, 0, 0, T, P_kpa, z)
             except Exception as e_res:
                 res = None
@@ -757,19 +814,25 @@ class REFPROPFluid:
                 # 记录并回退到 TPFLSH 作为最后手段（兼容旧逻辑）
                 msg = f"REFPROP2dll(TP) 计算警告/错误: ierr={getattr(res,'ierr',None)}, herr={getattr(res,'herr',None)}"
                 logger.warning(msg)
-                try:
-                    self._record_refprop_warning('REFPROP2_TP', {
-                        'T_K': T,
-                        'P_Pa': P,
-                        'P_kPa': P_kpa,
-                        'ierr': getattr(res, 'ierr', ''),
-                        'herr': getattr(res, 'herr', ''),
-                        'raw_D': getattr(res, 'Output', [''])[0] if res is not None else '',
-                        'raw_Cp': getattr(res, 'Output', ['','', '',''])[3] if res is not None else '',
-                        'message': msg
-                    })
-                except Exception:
-                    pass
+                # 去重相同的 REFPROP 警告，避免大量重复输出与重复写入文件
+                if not hasattr(self, '_reported_refprop_messages'):
+                    self._reported_refprop_messages = set()
+                key_msg = ("REFPROP2_TP", str(getattr(res, 'ierr', '')), str(getattr(res, 'herr', '')))
+                if key_msg not in self._reported_refprop_messages:
+                    self._reported_refprop_messages.add(key_msg)
+                    try:
+                        self._record_refprop_warning('REFPROP2_TP', {
+                            'T_K': T,
+                            'P_Pa': P,
+                            'P_kPa': P_kpa,
+                            'ierr': getattr(res, 'ierr', ''),
+                            'herr': getattr(res, 'herr', ''),
+                            'raw_D': getattr(res, 'Output', [''])[0] if res is not None else '',
+                            'raw_Cp': getattr(res, 'Output', ['','', '',''])[3] if res is not None else '',
+                            'message': msg
+                        })
+                    except Exception:
+                        pass
 
                 # 退回到旧的闪蒸/输运路径以保证不终止整个计算
                 results = self.RP.TPFLSHdll(T, P_kpa, z)
@@ -805,6 +868,11 @@ class REFPROPFluid:
                 except Exception:
                     cp_j_per_kgk = None
 
+                # 如果本次成功获得输运性质，则保存为上一次有效值以供高温超限时回退使用
+                if (viscosity_pa_s is not None) and (tcx is not None):
+                    # 保存为 (viscosity_Pa_s, tcx)
+                    self._last_transport_pa_tcx = (viscosity_pa_s, tcx)
+
                 # 处理密度的可能单位歧义（仍保留检测与转换）
                 raw_D_val = None
                 try:
@@ -837,6 +905,23 @@ class REFPROPFluid:
                 transport_results = _Pseudo()
                 setattr(transport_results, 'eta', viscosity_pa_s / 1e-6 if viscosity_pa_s is not None else None)  # 保持后续代码中乘以1e-6的习惯
                 setattr(transport_results, 'tcx', tcx)
+
+                # 若本次未请求或未得到输运性质（高温区间），尝试使用上一次有效值回退
+                if (not request_transport) or (viscosity_pa_s is None) or (tcx is None):
+                    last = getattr(self, '_last_transport_pa_tcx', None)
+                    if last is not None:
+                        last_vis_pa_s, last_tcx = last
+                        setattr(transport_results, 'eta', last_vis_pa_s / 1e-6)
+                        setattr(transport_results, 'tcx', last_tcx)
+                        logger.debug(f"使用上一次有效输运性质回退: viscosity={last_vis_pa_s:.3e} Pa·s, tcx={last_tcx:.3f} W/mK")
+                    else:
+                        # 无历史回退值，使用默认经验值以保证不改变主流程输出结构
+                        default_tr = self._get_default_methane_properties(T, P)
+                        last_vis_pa_s = default_tr['viscosity']
+                        last_tcx = default_tr['conductivity']
+                        setattr(transport_results, 'eta', last_vis_pa_s / 1e-6)
+                        setattr(transport_results, 'tcx', last_tcx)
+                        logger.debug("没有历史输运性质可用，使用默认经验输运值回退")
             
             # 组装返回结果
             # REFPROP 返回的 results.D 在不同接口可能为质量密度(kg/m³)或摩尔浓度(mol/L)
@@ -918,6 +1003,12 @@ class REFPROPFluid:
             logger.debug(f"- 热导率: {result_dict['conductivity']:.3f} W/(m·K)")
             logger.debug(f"- 比热: {result_dict['specific_heat']:.0f} J/(kg·K)")
             logger.debug(f"- 普朗特数: {result_dict['prandtl']:.3f}")
+
+            # 保存为最近一次有效的热力学物性，供高温超限时回退使用
+            try:
+                self._last_thermo = dict(result_dict)
+            except Exception:
+                pass
 
             return result_dict
 
@@ -1743,22 +1834,47 @@ class LOX_MethaneEngineHeatTransfer:
         返回:
         float: 无肋条换热系数 α₀ [W/(m²·K)]
         """
-        # 获取冷却剂物性
+        # 获取冷却剂物性并做稳健性检查/钳位
         coolant_props = self.fluid_props.get_methane_properties(T_c, P_c)
-        rho = coolant_props['density']
-        lambda_c = coolant_props['conductivity'] 
-        cp_c = coolant_props['specific_heat']
-        mu_c = coolant_props['viscosity']
-        
-        # 使用标准Dittus-Boelter公式计算无肋条换热系数
-        Re = rho * v_c * d_h / mu_c
-        Pr = cp_c * mu_c / lambda_c
-        
+        rho = float(coolant_props.get('density', 1.0))
+        lambda_c = float(coolant_props.get('conductivity', 0.1))
+        cp_c = float(coolant_props.get('specific_heat', 1000.0))
+        mu_c = float(coolant_props.get('viscosity', 1e-5))
+
+        # 钳位物性到合理范围，记录警告
+        if rho <= 0 or rho > 5000:
+            logger.warning(f"冷却剂密度异常 ({rho}), 已钳位为 1.0 kg/m3")
+            rho = max(rho, 1.0)
+        if lambda_c <= 0 or lambda_c > 1000:
+            logger.warning(f"冷却剂导热率异常 ({lambda_c}), 已钳位为 0.1 W/m·K")
+            lambda_c = max(min(lambda_c, 1000.0), 0.1)
+        if cp_c <= 0 or cp_c > 1e5:
+            logger.warning(f"冷却剂比热异常 ({cp_c}), 已钳位为 1000 J/kg·K")
+            cp_c = max(min(cp_c, 1e5), 1000.0)
+        if mu_c <= 0 or abs(mu_c) > 1.0:
+            logger.warning(f"冷却剂粘度异常 ({mu_c}), 已钳位为 1e-4 Pa·s")
+            mu_c = max(min(mu_c, 1.0), 1e-6)
+
+        # 计算无肋条换热系数，保护除零与非物理值
+        try:
+            Re = rho * v_c * d_h / mu_c
+        except Exception:
+            Re = 1.0
+        try:
+            Pr = cp_c * mu_c / lambda_c
+        except Exception:
+            Pr = 1.0
+
         if Re > 2300:  # 湍流
-            h_c0 = 0.023 * Re**0.8 * Pr**0.4 * lambda_c / d_h
+            h_c0 = 0.023 * Re**0.8 * Pr**0.4 * lambda_c / max(d_h, 1e-6)
         else:  # 层流
-            h_c0 = 3.66 * lambda_c / d_h  # 恒壁温圆管层流换热系数
-        
+            h_c0 = 3.66 * lambda_c / max(d_h, 1e-6)  # 恒壁温圆管层流换热系数
+
+        # 钳位换热系数到合理范围，避免极端/负值
+        if not (math.isfinite(h_c0)) or h_c0 <= 0 or h_c0 > 1e7:
+            logger.warning(f"无肋条换热系数无效: {h_c0}, 返回默认值1.0")
+            h_c0 = 1.0
+
         logger.debug(f"无肋条换热系数: Re={Re:.0f}, Pr={Pr:.3f}, h_c0={h_c0:.1f} W/(m²·K)")
         return h_c0
     
@@ -1845,12 +1961,26 @@ class LOX_MethaneEngineHeatTransfer:
         """
         logger.debug(f"计算冷却剂侧换热系数: T_c={T_c}K, P_c={P_c/1e6:.2f}MPa, T_wc={T_wc}K, v_c={v_c}m/s, d_h={d_h}m")
 
-        # 获取甲烷物性
+        # 获取甲烷物性并做稳健性检查/钳位
         methane_props = self.fluid_props.get_methane_properties(T_c, P_c)
-        rho = methane_props['density']
-        lambda_c = methane_props['conductivity']
-        cp_c = methane_props['specific_heat']
-        mu_c = methane_props['viscosity']
+        rho = float(methane_props.get('density', 1.0))
+        lambda_c = float(methane_props.get('conductivity', 0.1))
+        cp_c = float(methane_props.get('specific_heat', 1000.0))
+        mu_c = float(methane_props.get('viscosity', 1e-5))
+
+        # 钳位物性值并记录异常
+        if rho <= 0 or rho > 5000:
+            logger.warning(f"冷却剂密度异常 ({rho}), 已钳位为 1.0 kg/m3")
+            rho = max(rho, 1.0)
+        if lambda_c <= 0 or lambda_c > 1000:
+            logger.warning(f"冷却剂导热率异常 ({lambda_c}), 已钳位为 0.1 W/m·K")
+            lambda_c = max(min(lambda_c, 1000.0), 0.1)
+        if cp_c <= 0 or cp_c > 1e5:
+            logger.warning(f"冷却剂比热异常 ({cp_c}), 已钳位为 1000 J/kg·K")
+            cp_c = max(min(cp_c, 1e5), 1000.0)
+        if mu_c <= 0 or abs(mu_c) > 1.0:
+            logger.warning(f"冷却剂粘度异常 ({mu_c}), 已钳位为 1e-4 Pa·s")
+            mu_c = max(min(mu_c, 1.0), 1e-6)
 
         logger.debug(f"冷却剂物性: ρ={rho:.1f}kg/m³, λ={lambda_c:.3f}W/(m·K), cp={cp_c:.0f}J/(kg·K), μ={mu_c:.2e}Pa·s")
 
@@ -1866,14 +1996,24 @@ class LOX_MethaneEngineHeatTransfer:
         
         # 冷却剂侧换热系数计算 - 论文公式(8)
         try:
-            h_c = (0.023 * v_c**0.8 * d_h**-0.2 * 
-                   (rho**0.8 * lambda_c**0.6 * cp_c**0.4 / mu_c**0.4) * 
+            h_c = (0.023 * v_c**0.8 * d_h**-0.2 *
+                   (rho**0.8 * lambda_c**0.6 * cp_c**0.4 / mu_c**0.4) *
                    (T_c / T_wc_safe)**0.45)
-            logger.debug(f"冷却剂侧换热系数计算结果: h_c={h_c:.0f} W/(m²·K)")
+            # 如果结果是复数或非有限值，取实部或钳位
+            if isinstance(h_c, complex):
+                logger.warning(f"冷却剂侧换热系数为复数，取实部: {h_c}")
+                h_c = float(h_c.real)
         except Exception as e:
             logger.error(f"冷却剂侧换热系数计算异常: {e}, T_c={T_c}, T_wc={T_wc}, v_c={v_c}, d_h={d_h}")
             h_c = 1.0
-            logger.warning(f"使用默认换热系数: h_c={h_c} W/(m²·K)")
+        # 钳位换热系数
+        if not (math.isfinite(h_c)) or h_c <= 0:
+            logger.warning(f"计算得到的 h_c 非法: {h_c}, 使用最小值 1.0")
+            h_c = 1.0
+        if h_c > 1e7:
+            logger.warning(f"h_c 过大 ({h_c}), 已钳位为 1e7")
+            h_c = 1e7
+
         return h_c, methane_props
 
     def fin_correction_factor(self, h_c, lambda_wall, b_channel, temperature):
@@ -1898,11 +2038,35 @@ class LOX_MethaneEngineHeatTransfer:
         logger.debug(f"肋片参数: b_R={b_R:.4f}m, t_R={t_R:.4f}m, h_R={h_R:.4f}m")
         
         # 肋片效率计算 - 论文公式(6)-(7)
-        s_R = h_R * np.sqrt(2 * h_c / (lambda_wall * t_R))
-        k_r = b_R / (b_R + t_R) + (2 * h_c / (b_R + t_R)) * (np.tanh(s_R) / s_R)
+        # 肋片效率计算 - 注意避免 s_R=0 导致除零
+        try:
+            denom = lambda_wall * t_R
+            if denom <= 0:
+                logger.warning(f"壁面导热率或肋片厚度异常: λ={lambda_wall}, t_R={t_R}")
+                denom = max(denom, 1e-6)
+            s_R = h_R * np.sqrt(max(0.0, 2 * h_c / denom))
+            if s_R == 0:
+                tanh_over = 1.0
+            else:
+                tanh_over = float(np.tanh(s_R) / s_R)
+            k_r = b_R / (b_R + t_R) + (2 * h_c / (b_R + t_R)) * tanh_over
+        except Exception as e:
+            logger.error(f"肋片修正系数计算异常: {e}")
+            k_r = 1.0
+
+        # 钳位结果，保持在合理范围
+        if not (np.isfinite(k_r)):
+            logger.warning(f"肋片修正系数非有限: {k_r}, 设为1.0")
+            k_r = 1.0
+        k_r = float(k_r)
+        if k_r < 0.1:
+            logger.warning(f"肋片修正系数过小: {k_r}, 钳位为0.1")
+            k_r = 0.1
+        if k_r > 10.0:
+            logger.warning(f"肋片修正系数过大: {k_r}, 钳位为10.0")
+            k_r = 10.0
 
         logger.debug(f"肋片修正系数计算: s_R={s_R:.3f}, k_r={k_r:.3f}")
-        
         return k_r
 
     def wall_heat_conduction(self, T_wg, T_wc, lambda_wall, material_properties):
