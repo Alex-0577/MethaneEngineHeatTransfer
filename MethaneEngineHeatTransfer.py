@@ -1394,6 +1394,7 @@ class LOX_MethaneEngineHeatTransfer:
         mu_g = gas_props['viscosity']
         cp_g = gas_props['specific_heat']
         Pr_g = gas_props['prandtl']
+        k_g = gas_props['specific_heat_ratio']
 
         logger.debug(f"燃气物性: μ={mu_g:.2e}Pa·s, cp={cp_g:.2f}J/(kg·K), Pr={Pr_g:.3f}")
 
@@ -1473,7 +1474,7 @@ class LOX_MethaneEngineHeatTransfer:
 
     def calculate_thermal_conductivity(self, temperature, material_properties):
         """
-        使用两个温度电导率点之间的线性插值计算给定温度下的热导率
+        使用两个温度热导率点之间的线性插值计算给定温度下的热导率
         
         参数:
         temperature: 温度 [K]
@@ -2056,8 +2057,8 @@ class LOX_MethaneEngineHeatTransfer:
             logger.debug(f"使用传入的初始猜测: T_wg={T_wg_guess}K, T_wc={T_wc_guess}K")
         else:
             # 如果没有传入初始猜测，使用原来的默认方法
-            T_wc_guess = max(T_coolant_in, 100.0)
-            T_wg_guess = min(T_gas, max(500.0, T_wc_guess + 200.0))
+            T_wc_guess = T_coolant_in + 50.0
+            T_wg_guess = 0.5 * (T_gas + T_wc_guess)
             logger.debug(f"使用默认初始猜测: T_wg={T_wg_guess}K, T_wc={T_wc_guess}K")
         
         initial_guess_array = [T_wg_guess, T_wc_guess]
