@@ -930,6 +930,7 @@ class REFPROPFluid:
             'pressure': P,
             'speed_of_sound': speed_of_sound,
             'gamma': gamma,
+            'specific_heat_ratio': gamma,
             'molecular_weight': MolWt,
             'mixture_ratio': mixture_ratio,
             'source': 'CEA_enhanced'
